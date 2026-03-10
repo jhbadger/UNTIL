@@ -22,78 +22,129 @@ Files included in this package are:
   FILE               DESCRIPTION
   ------------------ ------------------------------------------------------------
   00READ.ME          This file.
+  
   ADD.APP            This is a simple filter program that adds up a the
                      first column of numbers in a file. I used this in
                      conjunction with a Unix-like wc programs to count
                      the number of lines in the source files for Until.  
+  
   ADDR1.APP          A version of the S-Engine program to generate a Roff5
                      output for the SGML address book application.
+  
   ADDRESS.APP        The S-Engine program to process the address book file
                      and produce a browsable HTML output file.
+  
   APPLIC.APP         A simple default application file.
+  
   CALL.C             The Compiler module source code.
+  
   CASE.APP           Simple test file for the case statement.
+  
   CASE.C             Code for the 'case' words.
+  
   COMPILER.H         Header file for selecting the compiler being used.
+  
   DEBUG.C            Source for simple C-level debugging functions.
+  
   FILE.C             The source code for the C I/O library words.
+  
   FILEXAMP.APP       The File Word example code from the Ref Manual.
+  
   FILTER.APP         A skeleton file filter program. It reads a file, and
                      executes a user specified word on each line. When used
                      with the search and replace words, FILTER provides a 
 					 very convenient text filter.
+  
   FILTEREX.APP       A file filter example that floads FILTER.APP.
+  
   FIXENT.APP         This filter translates the default entities into their
                      printable form. It was used in creating the printable
                      Until Reference Manual from the base HTML doc file.
+  
   FLOAT.C            Source code for floating point words.
+  
   FUNCTS.H           Function prototypes.
+  
   G2HELP.APP         An Until filter program that generates help.app from the
                      base HTML word glossary. Note the HTML version of the
                      file is included when you purchase the printed manual.
+  
   HELP.APP           The help file used inside Until.
+  
   HELP.C             Source for the help file module.
+  
   IO.C               File IO module source code.
+  
   IO.H               Include file for IO.H.
+  
   LICENSE.TXT        Until License text.
+  
   MAKEFILE.UNX       Unix makefile. Works with Sun Sparc ANS C, GCC on a Sparc,
                      Silicon Graphics ANS C, and Linux GCC.
+  
   MAKEFILE.BCC       A makefile for Turbo C++/Borland C++.
+  
   MATH.C             Math module source code.
+  
   OUTER.C            The Outer Interpreter source code.
+  
   PCOLON.APP         Sample Until program to print all colon definitions
                      in a source file.
+  
   PRIM.C             Until primitive words source code.
+  
   QUOTE.C            Source code that implements quoted constant strings.
+  
   SCREEN.C           Screen output code.
+  
   SEAL.C             Seal module source code.
+  
   SEARCH.C           An experimental module that contains simple, brute
                      force search and replace code. Note that while this code
                      has had good results from initial testing, it is not
                      documented. Use the words defined in it at your own risk!
+  
   SEARCH.H           Include file used by SEARCH.C.
+  
   SEARCH1.APP        A simple file filter demonstrating the search and replace
                      word set.
+  
   SENGINE.C          The source code for the SGML document intrepreter named
                      S-Engine.
+  
   SENGINE.H          Include file for SENGINE.C.
+  
   SHARP.C            The Forth formatting words set, \<#, #, #\>, etc.
+  
   SHOWBIT.C          The source code for .bin.
+  
   STOIC.APP          The Stoic String package.
+  
   STREXAMP.APP       C String example from the documentation.
+  
   STRING.APP         Example of the C String word set.
+  
   STRING.C           String module source code.
+  
   SYSTEM.C           Source code for words that call C system functions.
+  
   UNTIL.APP          Default, minimal startup code. It is sealed
                      into UNTIL.BIN.
+  
   UNTIL.BIN          Sealed version of UNTIL.APP.
+  
   UNTIL.C            Main program source code.
-  UNTIL.EXE          Executable Until.
+  
   UNTIL.H            Until data structures and global extern variables.
+  
   UNTIL25.DOC        Until V2.5 Reference Manual.
-  UNTILPRI H         Untill data structures and global extern variables.
+  
+  UNTILPRI.H         Until data structures and global extern variables.
+  
   USER.C             Primitive C words interfaced here.
+  
   VECTORED.C         Source code for vectored code.
+  
   VOCAB.C            Vocabulary module source code.
 
 The absolute minimum you need to run with is UNTIL.EXE. It's a good idea
