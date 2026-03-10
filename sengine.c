@@ -345,7 +345,7 @@ int parse_char(char ch)
 		entity_buf[0] = '\0';
 		break;
 	default:
-		printf("Invalid state: %d\n");
+		printf("Invalid state\n");
 	}
 	return(eo_tok);
 }
@@ -478,7 +478,7 @@ void exec_cmd(char* cmd)
 	int    len;
 	int    i;
 	int    found;
-	static started;
+	static int started;
 
 	if(!started){
 		started = TRUE;

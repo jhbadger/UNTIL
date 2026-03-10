@@ -403,7 +403,6 @@ void close_include()
 		*/
 	INPUT_SOURCE--;				/* decrement file #        */
 	this_file--;
-/*	this_file         = INPUT_SOURCE - 1;	/* Make prev file current  */
 	IN                = 1;
 	tib_len           = 0;
 	binary_input_mode = source[this_file].type;

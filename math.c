@@ -521,7 +521,7 @@ void absolute()
 	int  n;
 
 	n = popsp();
-	n = abs(n );
+	n = labs(n );
 	pushsp((long)n);
 }
 /***********************+----------+
@@ -650,8 +650,8 @@ void um_slash_mod()
 	unsigned long u1;
 	unsigned long u2;
 
-	u2 = abs(popsp());
-	u1 = abs(popsp());              /* get rid of placeholder 0*/
+	u2 = labs(popsp());
+	u1 = labs(popsp());              /* get rid of placeholder 0*/
 	u1 = popsp();
 
 	pushsp(u1 % u2);

@@ -44,7 +44,7 @@ void less_sharp()
 {
 	signed_number = popsp();	/* read dummy 0 	    */
 	signed_number = popsp();
-	pushsp(abs(signed_number));	/* convert numb to unsigned */
+	pushsp(labs(signed_number));	/* convert numb to unsigned */
 	pushsp((long)0);		/* add dummy 0 for a double */
 
 	hld = 80;

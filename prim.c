@@ -38,6 +38,8 @@
 */
 
 #include "compiler.h"
+#include <time.h>
+#include <errno.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -236,7 +238,7 @@ void word()
 #ifdef IGNORE
 void X_word()
 {
-	static flag;
+	static int flag;
 	static char *tib_ptr;
 	static not_first_time;
 
@@ -288,7 +290,7 @@ Start_Over:
 */
 void prim_token()
 {
-	static flag;
+	static int flag;
 
 	long X;
 	char *temp;

@@ -192,7 +192,7 @@ void startup(int argc, char** argv)
 */
 void outer()
 {
-	static started;
+	static int started;
 	int    found;
 
 	started = TRUE;
