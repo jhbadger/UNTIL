@@ -1,0 +1,104 @@
+OBJECTS= search.obj call.obj file.obj help.obj io.obj\
+	math.obj outer.obj prim.obj screen.obj seal.obj string.obj\
+	until.obj user.obj vectored.obj vocab.obj debug.obj showbit.obj\
+	sharp.obj quote.obj system.obj float.obj sengine.obj case.obj
+HEADERS= untilpri.h io.h until.h compiler.h functs.h
+FLAGS= -c -ml
+TFLAGS= /C
+CC=bcc
+
+Until.exe: $(HEADERS) $(OBJECTS)
+	$(CC) until.c until.lib
+
+search.obj: $(HEADERS) search.c
+	$(CC) $(FLAGS) search.c
+	tlib $(TFLAGS) until.lib -+search.obj
+
+showbit.obj: $(HEADERS) showbit.c
+	$(CC) $(FLAGS) showbit.c
+	tlib $(TFLAGS) until.lib -+showbit.obj
+
+call.obj: $(HEADERS) call.c
+	$(CC) $(FLAGS) call.c
+	tlib $(TFLAGS) until.lib -+call.obj
+
+file.obj: $(HEADERS) file.c
+	$(CC) $(FLAGS) file.c
+	tlib $(TFLAGS) until.lib -+file.obj
+
+help.obj: $(HEADERS) help.c
+	$(CC) $(FLAGS) help.c
+	tlib $(TFLAGS) until.lib -+help.obj
+
+io.obj: $(HEADERS) io.c
+	$(CC) $(FLAGS) io.c
+	tlib $(TFLAGS) until.lib -+io.obj
+
+math.obj: $(HEADERS) math.c
+	$(CC) $(FLAGS) math.c
+	tlib $(TFLAGS) until.lib -+math.obj
+
+outer.obj: $(HEADERS) outer.c
+	$(CC) $(FLAGS) outer.c
+	tlib $(TFLAGS) until.lib -+outer.obj
+
+prim.obj: $(HEADERS) prim.c
+	$(CC) $(FLAGS) prim.c
+	tlib $(TFLAGS) until.lib -+prim.obj
+
+screen.obj: $(HEADERS) screen.c
+	$(CC) $(FLAGS) screen.c
+	tlib $(TFLAGS) until.lib -+screen.obj
+
+seal.obj: $(HEADERS) seal.c
+	$(CC) $(FLAGS) seal.c
+	tlib $(TFLAGS) until.lib -+seal.obj
+
+string.obj: $(HEADERS) string.c
+	$(CC) $(FLAGS) string.c
+	tlib $(TFLAGS) until.lib -+string.obj
+
+user.obj: $(HEADERS) user.c
+	$(CC) $(FLAGS) user.c
+	tlib $(TFLAGS) until.lib -+user.obj
+
+vectored.obj: $(HEADERS) vectored.c
+	$(CC) $(FLAGS) vectored.c
+	tlib $(TFLAGS) until.lib -+vectored.obj
+
+vocab.obj: $(HEADERS) vocab.c
+	$(CC) $(FLAGS) vocab.c
+	tlib $(TFLAGS) until.lib -+vocab.obj
+
+debug.obj: $(HEADERS) debug.c
+	$(CC) $(FLAGS) debug.c
+	tlib $(TFLAGS) until.lib -+debug.obj
+
+until.obj: $(HEADERS) until.c
+	$(CC) $(FLAGS) until.c
+	tlib $(TFLAGS) until.lib -+until.obj
+
+quote.obj: $(HEADERS) quote.c
+	$(CC) $(FLAGS) quote.c
+	tlib $(TFLAGS) until.lib -+quote.obj
+
+sharp.obj: $(HEADERS) sharp.c
+	$(CC) $(FLAGS) sharp.c
+	tlib $(TFLAGS) until.lib -+sharp.obj
+
+system.obj: $(HEADERS) system.c
+	$(CC) $(FLAGS) system.c
+	tlib $(TFLAGS) until.lib -+system.obj
+
+float.obj: $(HEADERS) float.c
+	$(CC) $(FLAGS) float.c
+	tlib $(TFLAGS) until.lib -+float.obj
+
+sengine.obj: $(HEADERS) sengine.c
+	$(CC) $(FLAGS) sengine.c
+	tlib $(TFLAGS) until.lib -+sengine.obj
+
+case.obj: $(HEADERS) case.c
+	$(CC) $(FLAGS) case.c
+	tlib $(TFLAGS) until.lib -+case.obj
+

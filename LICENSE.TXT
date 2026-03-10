@@ -1,0 +1,48 @@
+The Legal Stuff
+
+The licensing for Until is pretty simple. The license terms included in
+the book [SMITH1] applies to Until. Here it is:
+
+
+Right to use, copy, and modify this code is granted for personal
+non-commercial use, provided that the copyright disclosure remains on
+ALL copies.  Any other use, reproduction, or distribution requires the
+written consent of the author.
+
+Right to use, copy, and modify this code is granted for 
+commercial use, provided:
+
+- The copyright disclosure remains on ALL copies.  
+- Acknowledgement that you are using Until code in your documentation
+- Include a copy of "Write Your Own Programming Language Using C++" as 
+  documentation if you distribute the source code to an application 
+  written with Until.
+- Any other use, reproduction, or distribution requires the
+  written consent of the author.
+
+Until Copyright 1992, 1995 All Rights Reserved
+
+NORMAN E. SMITH DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+EVENT SHALL NORMAN E. SMITH BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF
+USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+
+UNTIL AUTHOR: Norman E. Smith, CDP
+Email Address:
+CompuServe: 72745,1566
+Internet: 72745.1566@compuserve.com
+Internet: smithn@orvb.saic.com
+
+The idea is that I want Until to be used and given credit for its use.
+I interpret personal use to include you using Until to write programs
+that you personally use, even at work. The use becomes commercial when
+Until is used in applications that are distributed for use either within
+your company or sold as part of a product. (This includes consulting.)
+
+Until is unique! It lets a program developer combine the best of both C
+and Forth into his applications. I want Until to be used. That is the
+reason for the very few restrictions on its use.
+

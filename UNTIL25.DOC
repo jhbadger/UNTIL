@@ -1,0 +1,6135 @@
+
+
+UNTIL REFERENCE GUIDE
+
+
+May 1995
+
+__________________________________________________________________
+
+
+Norman E. Smith, CDP
+Copyright 1993, 1994, 1995
+All Rights Reserved
+
+
+This Reference Manual is intended as documentation for the Until user
+and programmer. UNTIL (UNconventional Threaded
+Interpretive Language) is a Forth implemented in C/C++.
+The internals of Until are described in the book "Write Your Own
+Programming Language Using C++", ISBN# 1-55622-264-5. This manual
+applies to Until Version 2.5. It is divided into several sections. The
+first section is a brief overview of Until. The second section
+identifies the various computers that Until has been successfully ported
+to. The differences between Until and Forth-83 are identified in a
+section. Finally, a word glossary lists all of the primitive words and
+their operation.
+
+__________________________________________________________________
+
+
+PREFACE
+
+Until is a Forth-like language written in C/C++. (There have been
+versions in each.) This manual is a Reference Manual for Until.
+Internals are described in [SMITH1].
+
+Special thanks to Richard Secrist, who put up with daily accounts during
+both the development of Until and writing the book about it. And to the
+pre-Beta and Beta testers who got me off the dime to get Until in shape
+for general consumption:
+
+- Gary Bastin
+- Roger Hauck
+- Mike Lucek
+- Doug Philips
+- Richard Secrist
+- Michael Mundrane
+- Akira Kida
+- Skip Carter
+
+
+Special thanks to Skip Carter for allowing Until to reside on
+taygeta.oc.nps.navy.mil with anonymous FTP and access this manual from
+his WWW Home Page which is at http://taygeta.oc.nps.navy.mil/skips_home.html.
+
+I can be reached via CompuServe E-mail. My account is 72745,1566. I
+read mail about once a week. I am interested in Until stories and any
+enhancements you might make. Yes, I do want to know about bugs you
+find.
+
+There are three versions of this manual, a plain ASCII version, an
+electronic version, and a typeset version. The electronic version is in
+HTML format and can be viewed with Mosaic or any other HTML document
+viewer. This electronic version has some hypertext navigation
+capabilities. The HTML and typeset manual set is available from the
+author for $30, to cover reproduction and shipping costs. The typeset
+manual is formatted using Troff with the -ps and -ms options under the
+Coherent operating system. Unfortunately, Mark Williams Co. went out
+of business and Coherent is no longer available. It is still, however,
+useful.
+
+Unix is a trademark of AT&T. Other products mentioned are
+trademarks, registered trademarks, or copyrights of their respective
+companies.
+
+__________________________________________________________________
+
+
+                             1. OVERVIEW
+
+Introduction
+
+Until stands for UNconventional Threaded
+Interpretive Language. It is very Forth-like and in fact
+is about a 90% implementation of Forth-83. Until is different from any
+other Forth that I know of; it is:
+
+- Written in C/C++
+- Can call/be called by C functions
+- Takes advantage of the underlying operating system
+- Uses a non-contiguous dictionary
+- Screens and blocks are not implemented
+- Both counted (Forth) and null terminated (C) strings are supported.
+
+
+Most Forth implementations are written in assembler. This allows peak
+performance, but inhibits portability. The C implementation allows
+Until to be ported across many diverse platforms with minimal work. I
+want to write systems, not learn a new assembler for every
+computer/operating system I move to.
+
+Assembler implementations of Forth are almost always going to be faster
+than C implementations. They tend to take little advantage of the
+underlying operating system. In fact, most Forths tolerate the
+underlying operating system at best. Until takes advantage of it. C
+Forth implementations have a relatively easy time of supporting
+operating system features.
+
+Even though C implementations are slower than assembler implementations,
+modern computer resources, i.e. speed, are such that there is no reason
+for one to feel slow. I have used several Forth-in-C implementations on
+a PCs starting with a 10mz Turbo XT without feeling that I was waiting
+on compiles and such. If you are using a 386 or workstation the system
+will be waiting on you most of the time. Until's extreme portability is
+directly attributable to the portability of C.
+
+Until is mostly Forth-83 compatible. I have no plans at the present
+time to convert it to ANSI Forth. This is mostly because the standard
+is not yet adapted (late 1993) and I refuse to spend $50 for a copy of
+the interim document. Now, 1995, the published final version is
+$120! Someday I may attempt to make Until ANS compliant, but I am
+taking the view that extreme portability across platforms is also
+very important.
+
+Until was not designed as a stand alone Forth, but rather to be embedded
+within C applications. Until becomes the application's programmable
+macro language. Until can be used effectively as a stand alone Forth
+that is extremely portable, but its real strength is when used as an
+embedded macro language. I have also used Until as a prototyping
+language doing initial coding in Forth then writing the final code in C
+with much success.
+
+I very much support commercial Forths! Over the past 10 or 12 years,
+I have used, purchased, or convinced customers to purchase most
+commercial Forth packages. The support, documentation, and features
+are almost always above that of public domain implementations. There
+are of course a few exceptions. I wrote Until only after trying
+commercial Forths. In the final analysis some almost met my needs, but
+I never found any that suited completely. The main reason for not
+finding a suitable Forth was I wanted a portable version that ran
+on several computer systems that I could do general purpose rather
+than embedded applications with. For me writing Until was the correct
+decision. However if you are doing embedded systems, there is no
+question that commercial Forths are the only way to go! My decision
+now might now be the same as it was back then considering the way
+commercial Forths have evolved.
+
+__________________________________________________________________
+
+WHAT'S UNTIL GOOD FOR?
+
+Successful Until applications include:
+
+- Embedded macro language
+- File filters
+- Starting point for other interpreters
+- Experimenting with other system calls
+
+
+Until was designed from the ground up to be an embedded language. Great
+pains were taken to make sure that adding Until to other programs as a
+called function was simple. Instructions for embedding Until are
+included in the "Embedding Until"
+section.
+
+Until includes most of the C I/O and string functions as well as
+AWK-like sub and gsub words. This makes writing file filters both easy
+and convenient. A sample file filter program, FILTER.APP, is included
+as a sample application. I use Until almost daily for this type of
+application.
+
+
+A very powerful feature of Until is the relative easy with which it can
+be used as the starting point for other interpreters. One of the
+largest Until applications I have written is a Standard Generalized
+Markup Language (SGML) document interpreter. The
+PAL language from "Getting the Most Out of Your HP LaserJet
+Printer" is also based on a minimal version of Until.
+
+Experimenting with other system calls is another good use for Until
+because adding new C function is so easy. Assume you need to learn
+Windows system calls, for example. Add the calls to Until, then
+interactively exercise them with various parameters to see what happens.
+This can be a big time saver in the learning curve for such things!
+
+__________________________________________________________________
+
+WHY FORTH IN C
+
+There are many valid reasons for implementing Forth in C. This
+section addresses my reasons.
+
+The short list of reasons include:
+
+- Portability
+- Easy to embed in other application programs
+- Easy to modify dictionary structure
+- Easy to substitute new interpreters
+- Can be integrated with C function libraries
+
+
+C can be a very portable language. Most of the processors I regularly
+work on have a C compiler of some description. Porting Until to any
+processor/operating system with an ANSI C compiler can be done with a
+minimal amount of work.
+
+A program written in a high level language is relatively easy to embed
+in other application programs. This gives an instant `macro' capability
+to almost any program you write. The Forth must be designed to be used
+as an embedded application language for this to be true. (See the
+discussions of C Forths in the "History" section.)
+
+C allows the use of high level structures to define the dictionary
+definition. This makes it easy to modify dictionary structure. Some
+applications may require this.
+
+A custom outer interpreter can make some applications much easier to
+implement. The normal, interactive Until interpreter is less than a
+page of relatively simple C code. Replacing the default interpreter
+with an application-specific interpreter is very easy for this reason.
+(See the "Multiple Interpreters"
+section for additional discussions.)
+
+One of the best reasons for a Forth in C is the capability of
+integrating existing C function libraries into an application. For
+example, third party function libraries for communications and windowing
+are two of the many function libraries available. A few Forths allow
+access to generic function libraries, but they are usually platform
+specific. A C Forth allows this across multiple platforms.
+
+__________________________________________________________________
+
+Until Goals
+
+The broad design goals for Until are:
+
+- Portable Forth implementation
+- Marry Forth with C for applications development
+- Use Forth as an embedded macro/scripting language
+- Introduce non-Forth programmers to Forth
+
+
+I believe that all of these goals have been met. Until is portable. It
+has been compiled and run on several different compiler/computer
+combinations. There is very little in the code that is not generic
+C/C++. Even many of the system calls used are now specified by ANSI C
+and are therefore portable.
+
+I used an old dialect of Forth called STOIC at work for several years
+in a large database publishing project. When it became obvious that the
+customer insisted on switching to another language, I chose C. The
+change in language meant losing several capabilities taken for granted
+in the Forth world. Development time increases because of the
+traditional edit-compile-link-test cycle in most computer languages.
+Debugging became much more tedious. No longer could I poke around
+interactively in memory after a crash to find a problem. (Most turned
+out to be data problems rather than true program bugs in the STOIC
+application code, which is not the case with C code.)
+
+Until was originally intended to let me take a little piece of the
+Forth environment with me into the C world. Besides, I've always wanted
+to write a Forth system. That has turned out to be a very fortunate
+decision because I have two books about Until and a major Standard
+Generalized Markup Language (SGML) system about to go into production
+built around Until as I write this (late September 1992). And a third
+built around Until published in 1995. [SMITH3]
+
+Until has two unique properties when compared to the other Forths
+written in C that I have tried; it is designed to be both called by a C
+function and call other C functions. This feature was designed in from
+the beginning and allows Until to be embedded in other application
+programs to provide a user-level ``macro'' language.
+
+The final reason for Until and the books is to introduce Forth to the
+sea of C programmers out there who do not have any idea what Forth is,
+much less appreciate it. I know that has happened already.
+
+__________________________________________________________________
+
+
+History
+
+The history of Until development is not a long one, but may shed some
+light on the present state of Until. There have been a number of Forth
+written in C implementations that I have tried over the years and some I
+haven't. These include:
+
+- C-Coded figFORTH
+- Tile
+- ThisForth
+- PFE
+- CForth-83
+- Hence4th
+- Until
+
+
+Each of these Forths is written in C and deserves mention in any
+historical accounts of trying to use Forth as general purpose language.
+
+In addition, MPE produces an implementation of their Power Forth written
+in C. It is named PINC. If the quality of their other implementations
+is an indication, PINC is probably an excellent product. It is not
+intended for personal use, rather aimed at the Unix/workstation market.
+It's price is between $1500 and $2000 depending on exchange rates.
+
+
+ 	MPE, Ltd.
+ 	133 Hill Lane
+ 	Shirley,
+ 	Southampton, SO1 5AF
+ 	England
+
+
+As of mid-1993, several ANS C-Forths are under development.
+
+__________________________________________________________________
+
+
+C-Coded figFORTH
+
+Around 1985, Allen Pratt [PRATT85] published an implementation of Fig
+Forth in C.  It was a 16-bit Fig model that even included screen files. 
+It ran fine under Unix, if slow.  I never got it to run properly on a
+VAX with VMS.  It was interesting, but I did not find it very useful for
+my applications.  It compiled and ran with no changes on an Interactive
+Systems Unix System V.2 system and it has been ported to Coherent. 
+
+__________________________________________________________________
+
+
+Tile
+
+Tile is a Unix specific implementation of Forth. It is a 16-bit model
+that follows F-83 for the most part. A full multi-tasker is built into
+the kernel. This is a very complete package. My problem is the package
+is so tied into Unix and so many of the bells and whistles are wrapped
+into the kernel that I could not get it to even come close to compiling
+on any of the systems I have regular access to.
+
+I have just discovered (December 1992) that Austin Code Works
+distributes a MS-DOS version of Tile for $50. If it had been available
+two years earlier, I might not have started Until...
+
+__________________________________________________________________
+
+
+ThisForth
+
+ThisForth was originally released around August 1994 by Wil Baden and
+has been updated at least once since then. It is also available on
+Taygeta.  The ThisForth kernel is an ANS Forth written in the Unix M4
+macro language which produces ANS C which is compiled to create
+ThisForth.  ThisForth is interesting, but Until is too comfortable at
+this point for me to switch. The documentation is minimal. M4 source is
+included and a DOS version is available.
+
+__________________________________________________________________
+
+
+PFE
+
+The Portable Forth Environment is an almost ANS Forth by
+Dirk Uwe Zoller. It is available on Taygeta. PFE claims to comply
+with the last DPANS document released, should be very close
+to ANS standard. The DOS version requires a 32-bit extender
+which I have not managed to run.
+
+__________________________________________________________________
+
+
+CForth-83
+
+CForth-83 is an implementation of Forth-83 written by Mitch Bradley <A
+HREF="&BRADLEY;">[BRADLEY]. It is pretty generic, 32-bit, and
+includes full file support. I did manage to use it for one small
+production job. Its' short comings, in my opinion, include a 64k
+dictionary on PCs, and sparse documentation. CForth-83 is an excellent
+Forth if portability and a stand alone implementation are prime
+considerations.
+
+The final reasons I continued my search elsewhere was the difficultly of
+adding new C primitives. The interpreter, I don't remember if it was
+the inner or outer, is a giant case statement. Adding a new primitive
+means adding a new case and modifying files, I don't remember which
+ones, to mark the new primitive. I did it once, but did not write down
+the steps. Later when I needed to add another primitive again, I
+decided it was just too much trouble.
+
+By this time, I was starting to want a Forth to take with me in the
+transition to C. CForth-83 was the first Forth I considered usable in
+the general purpose programming arena. The two failings that caused me
+to look elsewhere are it is very difficult to add additional primitives
+to the kernel and it was never intended to be called by another C
+program.
+
+These comments apply to the circa 1987 version I used at work. My
+conclusions may or may not still apply.
+
+__________________________________________________________________
+
+
+Hence4th
+
+This is a relatively new (about 1990 or 1991) implementation of the
+Fig-Forth model. It was marketed as shareware. I ran it on the PC with
+little problem. The real question I had was "Why would anyone inflict a
+slow Fig Forth running under an operating system (Unix/DOS) that
+supported only screen files?" And, "Why would anyone pay money for it?"
+The shareware version of the system is just not usable. The "Starting
+Forth" Editor is even optional. In short, the system is not usable
+without buying all the options. If the authors added file support and
+such, then it could be worth another look.
+
+__________________________________________________________________
+
+
+Until
+
+Until is my baby. I have always wanted to write a Forth. My
+requirements were for a Forth, written in C, that could be integrated
+into other C programs to add functionality. The other C Forths
+mentioned all have some problem that eliminated them from the running.
+Either they could not be called, or primitives were hard to add, or they
+were specific to a particular OS. I finally gave up and started working
+on Until.
+
+My original intention was to implement the TIL described in "Threaded
+Interpretive Languages" by Loeliger <A
+HREF="&LOELIGER;">[LOELIGER] exactly in C. After I ran into a
+couple of problems, (my fault I'm sure) I started from scratch with the
+present Until design. I spend several months of evenings getting it to
+its present state. It was worth the effort to get the system I was
+looking for. It is not the fastest Forth in C, but its speed is
+acceptable, especially since I have never done any tuning.
+
+I based my book, "Write Your Own Programming
+Language Using C++" on Until, not mentioning Forth until almost
+half way through. I have a second book "Programming
+Output Drivers Using Borland C++" written and scheduled for
+publishing any day now (late September 1992) that show how to use Until
+as an embedded application language.
+
+__________________________________________________________________
+
+The Legal Stuff
+
+The licensing for Until is pretty simple. Here it is:
+
+
+ 	Right to use, copy, and modify this code is granted for
+personal non-commercial use, provided that this copyright disclosure
+remains on ALL copies and acknowledgment that Until source materials
+are used in your documentation.
+
+        Commercial use is granted to use, copy, and modify this code is
+granted for provided that this copyright disclosure remains on ALL
+copies, acknowledgment that Until source materials are used in your
+documentation, and a copy of "Write Your Own Programming Language Using
+C++" is included as documentation when the source code to an
+application is distributed written which uses Until code.
+
+        Any other use, reproduction, or distribution requires the
+written consent of the author.
+
+
+Until Copyright 1992, 1994, 1995 All Rights Reserved
+
+NORMAN E. SMITH DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+EVENT SHALL NORMAN E. SMITH BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF
+USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+
+UNTIL AUTHOR: Norman E. Smith, CDP
+Email Address:
+CompuServe: 72745,1566
+Internet: 72745.1566@CompuServe.com
+Internet: smithn@orvb.saic.com
+
+Until is unique! It lets a program developer combine the best of both C
+and Forth into his applications. I want Until to be used. That is the
+reason for the very few restrictions on its use.
+
+__________________________________________________________________
+
+Updates
+
+This section keeps track of the changes made in each version of Until.
+The manual was first written for Version 1.3, so the update list begins
+with that version. The initial release of Until was Version 1.2 in
+"Write Your Own Programming Language Using C++."
+
+Version
+
+
+1.3 	Changed word names from the book to Forth. i.e. m{ }m to :
+; etc.
+
+1.4 	Implement forget and several bug fixes. New words added
+include forget, expect, cls, ftell, fseek, d+, d-, d<. BUG fixes
+include changing "ascii" to immediate. Partial implementation of
+ AND associated other words.
+
+1.5 	First Beta release. Continue bug fixes as found. Finish
+implementing number formatting words (, ETC). Corrected hex
+number problems.
+
+1.6 	Second Beta release. New features include ability to run
+multiple interpreters after startup. Add LOCAL.C, etc. to have a clear
+separation of where Until stops and an application starts. Continue bug
+fixes as found. Some of the words added/modified include [, ], ['],
+compile [compile], and allot.
+1.6.1 - 1.6.4 	First cut at adding some of the hard words such as
+, and does>.
+1.6.5 	Added atol, converted tib, pstack, rstack, and here from
+arrays to pointers. These changes should make it easy to expand their
+default sizes at run time. The same changes need to be made for pad and
+pfa_list. Vectored most of the screen I/O words
+1.6.7 	Added vocabulary words, and other minor enhancements.
+1.7 	Minor bug corrections and several changes suggested by Doug Philips.
+1.8 	General code cleanup. Made changes suggested by
+Richard Secrist that prevents stack overflow/underflow from crashing
+Until.
+1.8.1 	Stop compilation from a file when a compile error occurs.
+This also helps prevent system crashes. Also changed C string words so
+returning the completion code optional.
+1.8.2 	Folded modifications from S-Engine kernel back into Until.
+1.8.3 	Fixed nested file compilation. Added both a default .BIN
+and .APP file automatically loading at startup. Added -f and -w command
+line options. -f specifies the file to load and -w specifies the word
+to run.
+1.8.4 	Made " state smart.
+1.9 	Beta release
+2.0 	First publicly released version. Added a generic version
+of the Borland fnsplit() function. The S-Engine kernel will be upgraded
+to use this version of Until. Version 1.4 was used previously.
+2.0.1 	Fixed minor bugs.
+2.0.3 	Added unseal
+2.0.4 	Rewrote word to use C strtok() functions instead of
+stepping through tib one character at a time.
+2.1 	The major change was porting Until to Unix. The supplied
+makefile works on several Unix systems with little or no change. It
+works with Sun Sparc ANS C and SGI ANS C with no changes and with GCC on
+the Sparc by changing the compiler flag from 'cc' to 'gcc'. Added
+SEARCH.C which implements rough equivalents of AWK's sub and gsub
+functions. FILTER.APP, a skeleton file filter program, is also new.
+Reverted to old version of "word()" after ran into problems with
+"backslash".
+2.2 	Reworked UNTIL.C to make Until easier to embed and wrote
+instructions. Replaced help() with code contributed by Michael
+Mundrane. Modified get_stdin() to call fgets() instead of gets() and
+make EOF from the keyboard exit Until instead of generating an error per
+a suggestion by Michael Mundrane. Cleaned up code by removing
+unreferenced variables per suggestions by Akira Kida. This eliminates
+most of the warning messages generated while compiling Until. Akira
+also contributed a working version of shell() for Unix systems. Moved
+file descriptor stack from UNTIL.H to IO.H.
+2.2.2 	Bug fix where stacks were not being malloc()'d properly.
+2.3   	Initial floating point and printf implementations. Not released.
+2.4   	Merged V2.3 with Skip Carter's C-level I/O redirection
+code, added error checking for all malloc() calls, backslash quoted
+characters in " ..." string constants, getenv, case, and the S-Engine
+SGML document interpreter. Treated as a working update and not
+released.
+2.5   	Public release of the changes since V2.2.2 including
+updated documentation. Release prepared for the 1995 Rochester Forth
+Conference.
+
+__________________________________________________________________
+
+
+2. INSTALLING UNTIL
+
+Installing Until is quite simple. Simply unzip the files into a
+directory on your system, such as \until. You must compile Until if you
+are running on a Unix system. In either case copy the Until executable
+file (until.exe for MS-DOS or Until for Unix) to a directory in your
+path. If you are using MS-DOS, you are ready to run.
+
+__________________________________________________________________
+
+
+3. RUNNING UNTIL
+
+Until uses several files in addition to UNTIL.EXE. The other files are
+optional. The files and the order that they load are:
+
+- UNTIL.BIN
+- APPLIC.APP
+- Files specified with -f command line flags
+- HELP.APP
+
+
+HELP.APP is not actually loaded at startup; it is used by the word
+"help" to provide on-line help information.
+
+The execution begins setting up all of the primitive words defined in
+the USER.C file. The primitives are fixed at compile time.
+
+Next, UNTIL.BIN is loaded. During development, it generally contains
+words that always compile. These in effect become part of your personal
+development environment. At the end of development, your application
+can be 'sealed' into binary form. This is a convenient way to
+distribute applications without source. If UNTIL.BIN does not exist, an
+error message is generated.
+
+Application code is contained in APPLIC.APP, by default. It is compiled
+after UNTIL.BIN. No error message is given if this file does not exist.
+Note: The need for APPLIC.APP is an artifact left over from pre V2
+Until. Using APPLIC is now an obsolete feature; expect it to be removed
+in a future release.
+
+One or more additional files may be loaded from the command line using
+the -f flag. Multiple files may be loaded by specifying multiple
+-f options. The format for specifying a file this way is:
+
+  -fname.app
+
+
+Where "name.app" is the name of the file to load. If the file
+extension is .BIN, the file is processed as a sealed file. Otherwise,
+the file is compiled as a normal ASCII source file.
+
+An additional command line option, -w, is also provided to allow
+a different word than the outer interpreter to execute. The format is:
+
+  -wAny_word
+
+
+Where "Any_word" is any Until word. The word executes, then Until exits.
+
+Type UNTIL at the DOS prompt to run Until. The following screen is
+displayed:
+
+__________________________________________________________________
+
+
+
+                                    Until
+                          (c) Copyright 1994, 1995
+                             All Rights Reserved
+                               Norman E. Smith
+
+                                 Version 2.5
+                                 June 01, 1995
+
+
+Until> Welcome to UNTIL
+
+Until>
+
+__________________________________________________________________
+
+
+Stack contents are displayed in the upper right hand corner of the
+screen every time through the Outer Interpreter loop (DOS only). Type
+bye to exit Until and return to DOS.
+
+__________________________________________________________________
+
+UNTIL.BIN
+
+The following is the default listing for what is sealed into
+UNTIL.BIN.
+
+(  until.app )
+
+: hello
+   ." Welcome to UNTIL" cr cr
+   ;
+
+-1 constant true
+ 0 constant false
+
+: d.           ( d --- )
+   drop .
+   ;
+
+: >here                 ( 'string --- )  ( copy string to here )
+   here 20 0 fill
+   count here swap cmove
+   ;
+
+true null_strings
+false string_returns
+
+hello
+
+
+
+__________________________________________________________________
+
+
+4. PORTS
+
+Versions Until has been successfully ported to the following
+computers/operating systems:
+
+
+  OS             COMPILER
+  ==             ========
+  MS-DOS         Borland C/C++ *+
+  MS-DOS         Symantic C++ 6.1*
+  MS-DOS         Mix Power C
+  Linux          GCC 2.5.8
+  Coherent 3.2   C
+  VAX/VMS        VAX C *
+  OSF/1          DEC C +
+  RT-11          DEC PDP-11 C +
+  IRIX           SGI ANS C *
+  IRIX           GCC *
+  Solaris 2.3    Sun ANS C *
+  Solaris 2.3    GCC *
+  Mips           ANS C *
+  Mips           GCC *
+
+* Current port, V2.5 compiles
++ V1.8 compiled
+
+
+This list is subject to change and indicates the ease with which porting
+Until to new C compilers can be done.
+
+I tried compiling Until with PCC (aka DeSmet C) without any luck. The
+first barrier was the K&R function arguments vs ANSI C function
+argument declarations. That was solved with some painful editing. The
+problem I could not get around was calling a function via pointer. The
+statement:
+
+  (*funct)();
+
+
+to call a function via pointer gave a fatal compile error. This is used
+several times in Until. If someone could solve that, then PCC would
+compile a minimal version of Until.
+
+__________________________________________________________________
+
+Porting Approach
+
+Until was written with portability in mind. This section identifies
+some of the problems that have been encountered in porting Until from
+the original base Borland C++ implementation.
+
+The general approach to porting from C++ to C is:
+
+- Change all comments from // to /* ... */ form.
+- Change "new"calls to "malloc()" calls.
+- Change "cout <<" to "printf" calls. Note that this has
+  already been done in the base implementation because of .EXE file
+  size savings.
+- Some include file names vary among compilers.
+- Rewrite/comment any compiler specific code.
+
+
+All of the compilers are not verified each time a change is made to
+Until. So, some minor modifications may be required to when porting
+back to a non-baseline version. Every attempt is made not to `break' an
+existing port, but it does happen sometimes. All development is done on
+a PC using Borland C++. The file COMPILER.H
+attempts to detect the C compiler being used and automatically set
+#DEFINES accordingly.
+
+__________________________________________________________________
+
+Porting Problems
+
+There are several problems were encountered, depending on the target
+compiler. These include:
+
+- Problem with "malloc()".
+- Small model compilers passing constants.
+- Differences in declaring function prototypes between ANSI C compilers
+  and K&R compilers.
+- Screen functions.
+- Differences in system include files.
+
+
+A porting problem that took some time to track down was the difference
+between "malloc()" and "new". When strings are allocated
+using "new", space is allocated for the trailing null. This is not
+the case with "malloc()". Especially with small model compilers,
+the problem showed itself by locking up the computer. It was solved by
+adding two to the length in the "malloc()" call when allocating
+memory for strings such as the word name.
+
+One problem that showed up when using small model compilers was the way
+constants are passed in argument lists. Until uses a 32-bit parameter
+stack, so all values are cast to long before being pushed. Integer
+constants are treated as 16-bit integers. Hence, in functions like
+"three()" that push a constant. The value was not what was
+expected. This was fixed by casting all constants in the call to
+"pushsp()".
+
+The prototype declarations are considerably different between ANSI and
+K&R C. This was not a tough problem to find, but a real pain to fix
+with about 200 functions to modify. I ended up making separate source
+code copies for use with K&R C compilers, notably Coherent C.
+
+The Borland C++ version of Until uses "kbhit()" and several screen
+manipulation functions ("wherex()", "wherey()", etc.) that are
+not normally part of ANS C. These functions are in a separate
+module, CONSOLE.C.
+
+Selection of system and compiler is done via COMPILER.H. Automatic
+selection is done when possible as well in COMPILER.H.
+
+
+__________________________________________________________________
+
+PC Memory Models
+
+The PC, with its segmented memory architecture, has caused some
+``interesting'' anomalies in Until. This section identifies
+bugs/features I have discovered in the PC version of Until. The
+problems fall into two broad categories, small model compilers and
+addresses.
+
+The small model problems show up primarily with Borland C/C++.
+Small model in other compilers (Coherent and Mix Power C)
+do not show this problem, although they have not been tested
+extensively. High level words store everything in the dictionary (PFA
+field) as a DictHeader*.  Constants compiled into a word are screwed
+up. My solution for the short term is use compact model or larger when
+using Borland C++.  The only other small model compiler that was
+convenient to check was Coherent and the problem was not there. Here is
+an example of the problem:
+
+
+  : problem  10 0 do i . loop ;
+
+
+This causes garbage to be used in place of 10 with Borland C++ using the
+small model at execution time. The value compiled into the dictionary
+appears to be correct.
+
+Addresses displayed by "dump" and ".s" seem really strange;
+they are very large, 10 digit integers. This is well above the address
+space of my PC. The first byte of the dump is always prints as 00, but
+the ASCII representation is correct. The address printing problems only
+show up on the PC. VAX and DECstation versions work correctly. I
+assume that addresses are in some weird format, maybe paragraph number
+and offset, that displaying them as simple long integers does not handle
+properly.
+
+Another problem was discovered with PC memory models. Roger Hauck
+reported a problem when trying to combine Until with a large memory
+model Fortran subroutine library. I could not duplicate his problem.
+Several weeks later I had another problem with a C string compare
+failing in a portion of Until that I had not changed. This problem was
+tracked down to having to use far versions of all the string functions
+when compiling large model programs. The quick fix of redefining the
+string functions to _f... versions in COMPILER.H has held up for some
+months now and will be left alone baring further problems.
+
+At this point, always use large model or greater when compiling Until
+with any PC compiler. This may also apply to Unix C compilers as well
+where memory model is an option.
+
+__________________________________________________________________
+
+PORTING TO OTHER OPERATING SYSTEMS
+
+This section discusses general considerations for porting Until to other
+operating systems. It is not necessarily specific to Until, but
+certainly affects it.
+
+Forth does direct console I/O. This is not portable in C on many
+systems. C console I/O is buffered by default. Even though you call
+"getc()" to read a single character, C buffers the entire line
+before returning from the "getc()" call. Therefore, implementing
+Forth console I/O words is system specific.
+
+The present solution is that Until uses "getc()" for "key" and always
+returns TRUE when "?terminal" is executed. Future versions of Until
+plan to add raw mode console I/O so that "key" and "?terminal" function
+identically across operating systems.
+
+Another area of potential portability problems is screen I/O. Until
+uses a small number of Borland C++ specific screen functions for cursor
+positioning and such. Several possibilities exist for ways around this.
+A partial solution is implementing versions of some functions, such as
+"gotoxy" using ANS terminal escape
+sequences, A more complete solution, with some associated overhead, is
+curses. The choice of implementation solution will be determined later.
+
+System include files frequently require tweaking from system to system
+and compiler to compiler.
+
+The final major portability area of concern is signal handling. Signal
+processing is not very portable. A broad subset of common signals will
+be implemented as part of a future Until release.
+
+__________________________________________________________________
+
+
+5. DIFFERENCES FROM FORTH-83
+
+This section describes the principle differences between Until and the
+Forth-83 standard. The primary differences include words not yet
+implemented and the approach taken to interfacing with the operating
+system. This section also describes the use of "pfa_list[]" in
+compiling words and describes the possible approaches to implementing
+comma and c-comma.
+
+__________________________________________________________________
+
+General Differences
+
+This section describes the general differences between Until and a
+typical Forth implementation, whatever that is. My opinion is that any
+Forth that implements the Forth-83 Handy Reference Card is a
+`typical' Forth. Differences include:
+
+- 32-bit data and return stacks. The double-number word set was not
+  implemented because all integers are effectively doubles.
+- Subroutine threading. There is no access to the return stack for the
+  purpose of altering where a word returns to because each word
+  executes by calling a C function. i.e. "r> drop" will probably not
+  have the intended effect. The C compiler has control over the return
+  point of functions. A return stack is built into Until for use by
+  looping words, as in normal Forth.
+
+- Data structures. "pad", "here", etc. normally float at the end of the
+  dictionary. Since Until does not have a contiguous dictionary, these
+  work areas are static strings. The maximum number of words allowed in
+  a colon definition is 100. "pad" and "here" are arrays rather than
+  pointers.
+- Non-contiguous dictionary. The dictionary is allocated
+  as words are defined. Each word cannot exceed 64k, but the dictionary
+  is not limited to that size. It is limited by the amount of available
+  memory. A maximum dictionary size of 64k is frequently a size
+  limitation for C Forths.  This has caused some potential
+  compatibility problems. In fact, several of the unimplemented words
+  were skipped for this reason.
+- Text files. Source code is assumed to
+be in a text file. The block file word set (block, update, etc.) are
+not implemented. I believe block file support can be added without too
+much effort. (VMS is the exception!!)
+- Tick. Until's version of '
+(tick) returns the word address (WA) instead of the PFA of the word.
+This is just a whole lot easier in C because each dictionary header is
+a structure and each field (NFA, LFA, PFA, and CFA) are pointers. All
+of the internal code expects this, so there is no functional difference
+between the two. I can envision cases were the difference might not
+provide expected results.
+- All possible words are primitives.
+Primitives are considerably faster than high level words in Until and
+adding primitive C functions is very easy.  - Cannot save the state of
+the system.
+
+- The unsigned division words in Forth-83 systems, (um/mod, um/, etc.)
+use double-numbers for internal division to prevent loss of accuracy
+when dealing with 16-bit division. Until uses 32-bit integers
+internally so accuracy is less of a problem.
+
+- Double-number support (64-bit) integers are not easy to implement
+in C/C++. For this reason, all of the double number word set
+effectively provides the same results as normal integer words. This
+means the result of "d*" is identical to "*". All double
+numbers keep a dummy zero, which is ignored by the words for
+stack entry compatibility with other Forth systems.
+- The decimal point is not currently recognized to mark a double
+length integer number. Many Forths automatically recognize "90000."
+as a double number. Until does not.
+- The implementation of "," and "c," is complicated considerably
+by using the non-contiguous dictionary. See implementation details below.
+- Words are not compiled directly into the dictionary. An intermediate
+area, called"pfa_list[]," is
+used, then the compiled definition built in the dictionary.
+See details below.
+- Vocabulary words are a Fig-Forth type implementation of the Forth-83
+Standard vocabularies. The words are "vocabulary" and
+"definitions." The
+F-83 only/also vocabulary word set is not implemented.
+- " will return either a null or counted string depending on the
+value of "quot_null".
+- Many C library functions, notably string and I/O, as well as
+support for null terminated strings are available directly from Until.
+
+
+__________________________________________________________________
+
+c, and ,
+
+One of the consequences of implementing Until with a non-linear
+dictionary is words that normally manipulate "here" must be
+modified. Words that simply use "here" are little affected. Words
+that use here as a pointer, such as c, and ,, are the primary problem.
+
+Several approaches exist to provide equivalent functionality in Until,
+so c, and , are not absolutely necessary for new code. Examples
+include:
+
+- Use "malloc()" to allocate a buffer and use it, keeping track
+of the end of the buffer.
+- Write a C function to fill a buffer.
+- Use "allot" to create a Forth buffer. The next available location
+in the buffer must be kept track of by the application.
+
+
+Each is relatively simple to implement. The problem with all these is
+compatibility with existing Forth code. There are two potential
+approaches for implementing , and c, that have merit, allocating a fixed
+buffer for all comma operations to reference and dynamically allocating
+memory as entries are added. Each approach is discussed in the
+following sections. I am leaning toward dynamic allocation.
+
+Both approaches affect "allot". Instead of simply allocating a
+memory buffer, "allot" must allocate/manipulate a data structure to
+keep track of the current offset in the buffer and the end of the
+buffer. Other uses of allot can be oblivious to the changes.
+
+There are two primary uses of , and c,, building small tables and
+compiling values into the dictionary. The following code is typical of
+building a table:
+
+
+  create esc_sequence  27 c, ascii [ c, ascii 2 c,
+
+
+The problem with this is when to copy the pfa_list array into the
+dictionary. ; normally triggers this action.
+
+A traditional definition of "constant" illustrates a typical
+use of ,:
+
+
+  : constant create ,  does> @ ;
+
+
+This use of , is not valid in Until. For the time being "does>"
+is not implemented, which would break similar code anyway.
+
+__________________________________________________________________
+
+Compiling Definitions
+
+Until must take a different approach to compiling words too. Memory for
+each word is allocated dynamically. The PFA of colon definitions is
+constructed in a fixed array named "pfa_list[]", then the actual
+amount of memory used by the word allocated by ;, and the contents
+copied. The primary advantage to this technique is only the amount of
+memory required for a word is allocated, rather than a large fixed
+amount.
+
+Beware when modifying code that manipulates "pfa_list[]" because it is
+used all over the compiler!! However, a C macro was added in V2.5 that
+adds a value to the next location in "pfa_list[]" and increments
+"pfa_offset" called COMPILE_ADDR. All references to "pfa_list[]" do not
+reference the macro yet. Consider it a hook for a completely new
+dictionary structure in some future version.
+
+__________________________________________________________________
+
+Known Bugs
+
+Most systems of any size have some known bugs. This section
+identifies the known bugs in Until. The list is given in no
+particular order.
+
+- The number conversion C function, "number()", uses the C
+function "atol()", which converts all digits in a string
+it can and ignores the rest. So, "3dup", converts to the number
+3 rather than being flagged as not found. This shows itself by
+extra numbers being left on the stack at the end of a compile.
+- Number does not recognize a ``.'' in a number to flag it as
+a double value.
+- Several useful words in the PC version are not functional in
+other Until versions. Examples are "gotoxy, cls, wherex," and
+"wherey".
+- "dump" and . do not appear to display addresses properly. This seems
+to be a problem only on the PC.
+- Previously mentioned far memory problems.
+- "number()" uses C's "atol()" for decimal numbers. Any leading digits
+in a string will be converted with no errors. Using "27dup" will not
+give any error indication even though it is not defined. The value 27
+is left on the stack in this example.
+
+
+__________________________________________________________________
+
+Unimplemented Words
+
+A number of normal Forth-83 words have not been implemented in Until
+yet. This is mostly because I have not needed them in my applications.
+Laziness also enters into it. The missing words can be divided into
+several groups; memory allocation words, defining words, disk words, and
+other words. The following words are not yet implemented in Until:
+
+- Memory allocation words. , c,
+- Disk words. list load block b/buf update flush empty-buffers
+- Defining words. <builds  does>
+
+
+The memory allocation words are trivial to write. There are some tough
+decisions to make about exactly how to write them since Until uses a
+non-linear dictionary. Does the memory get compiled into the last word
+defined? Do you change the CFA of that word from whatever it is to
+"do_comma" or "do_allot". There are several reasonable
+solutions, but compatibility with existing code would be poor. I am
+afraid that there will be no good solution here. See the section on ,
+and c,.
+
+Until does not implement the disk word set. I much prefer files to disk
+blocks, so this is not a great loss to me. However, it is possible to
+implement the disk word set completely in high level Until code using
+the supplied file word set.
+
+The defining words were just skipped completely in the initial
+implementation. I did not even try to implement them. (I like the name
+"<builds" from Fig-Forth for defining words by the way.) Much of
+the need for compiling words goes away because it is so simple to
+implement a new word type as a C primitive. Thus, this capability can
+be implemented in other ways within the C/Forth Until environment. It
+does not help compatibility with other Forth code though. (See <A
+HREF="&DOES;">"Getting Along Without DOES>" for ways to
+get around the lack of defining words in Until.)
+
+True double number words were left out because Until is 32-bit, so all
+integers are effectively double when compared to normal 16-bit Forth
+implementations.
+
+Most of the missing words are not a big deal from developing
+applications stand point. This is not true from a compatibility
+standpoint. Most of the missing words I have rarely used so did not
+think they would be missed all that much. I have since changed my mind
+on some of them.
+
+__________________________________________________________________
+
+Planned Enhancements
+
+This section identifies planned, well at least thought about,
+enhancements to Until. These include:
+
+- Implementing the missing words
+- Catching C/system signals
+- Multiple interpreters
+- Integrate more OS features
+- ANS Forth catch/throw
+- Big integers
+- DOES>
+- Make Until distributable as object files
+- Decompiler
+- Local variables
+- Incorporate the Boyer-Moore search algorithm in the string search words
+- Start moving toward ANS compatability
+- Begin code optimization
+- Incorporate a new dictionary structure
+- Flush out floating point package
+- Upgrade S-Engine features
+
+
+The most obvious enhancements are adding the missing words. Most of the
+missing words are needed for compatibility with what Forth programmers
+are used to using. Each group had some minor problem associated with
+them that required some decisions and a great deal of thought. I put
+both off and got started using Until for projects that required a
+minimal Forth capability. The bottom line is that I never got around to
+adding them. In hindsight, the usability of Until for general
+programming is limited only slightly at the present time because of the
+missing words.
+
+Catching C signals is not required, but will make interactive operation
+more convenient, especially on non-DOS platforms. For example,
+<Ctrl>-C is trapped by C and can be handled in the program rather
+than forcing an exit to the operating system. Signal handling also
+provides the hooks to use a cut down version of Until as a run-time C
+debugging package.
+
+Multiple interpreters are very easy to do in Until, but I have never
+seen this feature in any other Forth implementation. One interpreter
+can be used at startup to compile all the primitives and macros, then a
+different one used to interpret a text file, and so on. (See the
+discussion of text processing applications in Section 4.3.)
+
+Integrating more operating system features into Until will take it a
+step or two closer to being a general purpose language. The capability
+of interactively calling any system function that can be called from C
+is a powerful tool that can make learning and using advanced OS features
+much easier.
+
+Bottom line is V3.0 will be an even more major upgrade than the V2.5
+upgrade is.
+
+__________________________________________________________________
+
+Extensions
+
+This section describes extensions beyond the Forth-83 Standard that are
+included in Until. The primary extensions in Until at the present time
+are:
+
+- File words
+- Operating system words
+- String words
+- Console I/O words
+- Vectored C I/O
+- S-Engine
+- Search and replace word set
+
+
+A good subset of each of these already exists. These word sets add much
+in the way of convenience to development with Until. These words are
+one way that Until takes advantage of the underlying operating system
+instead of simply tolerating it. Another point is the words listed here
+are very portable. Only one word, "shell", does not operate the
+way I think it should under one operating system, "OSF/1". I have
+run Until under four operating systems to date. More words will be
+added as the need arises and time permits.
+
+__________________________________________________________________
+
+
+6. SOURCE CODE
+
+Until is organized as modules. This section describes the C modules and
+identifies the contents of each. The approach to using Until as an
+embedded application language is also touched on. There is also a
+complete book already written on the subject. [SMITH2] The source files
+are:
+
+- COMPILER.H
+- FUNCTS.H
+- IO.H
+- SEARCH.H
+- UNTIL.H
+- CALL.C
+- CASE.C
+- CONSOLE.C
+- FILE.C
+- FLOAT.C
+- HELP.C
+- IO.C
+- MATH.C
+- OUTER.C
+- PRIM.C
+- QUOTE.C
+- SEAL.C
+- SENGINE.C
+- SEARCH.C
+- SHARP.C
+- SYSTEM.C
+- USER.C
+- UNTIL.C
+- VECTORS.C
+- VOCAB.C
+
+
+These files comprise over 13,000 lines of code. Until has grown
+considerably since the first published version in [SMITH1], which
+was approximately 4000 lines of code.
+
+
+COMPILER.H
+	As Until has been ported to other
+computers, conditional compilation statements have been added to the
+code. This header file defines the compiler for the rest of the
+compile. Select the appropriate #define that closest matches the
+compiler you are using.
+
+FUNCTS.H
+	Function prototypes are all placed in this header file.
+
+IO.H
+	This header file contains the file
+descriptor stack and associated pointers. It is referenced only by
+IO.C.
+
+SEARCH.H
+	This file contains data structures
+used by SEARCH.C.
+
+UNTIL.H
+	This header file includes definitions
+of all the global data structures and variables used in Until.
+
+CALL.C
+	This module contains the compiler. If
+you ever wanted to compile C or Basic or whatever instead of Forth,
+simply replace CALL.C with your own compiler.
+
+CASE.C
+	This module contains the code for
+the "case" construct.
+
+CONSOLE.C
+	This module contains console and
+screen I/O functions. These types of functions tend to be compiler
+specific. They are grouped here for ease of maintenance.
+
+FILE.C
+	This module contains interface modules
+to C I/O functions such as fopen() and fgets().
+
+FLOAT.C
+	This module contains floating point
+implementation. The symbol FLOATING_POINT in COMPILER.H activates
+floating point words.
+
+HELP.C
+	This module is self contained. The
+code for the Until help facility is in this file.
+
+IO.C
+	This module contains Forth type I/O and
+internal Until I/O functions.
+
+MATH.C
+	The primitives related to math and
+logic can be found in math.c.
+
+OUTER.C
+	The interpreters are included in this
+module. There are two, one interactive and one for using Until as an
+embedded application or macro language.
+
+PRIM.C
+	The C functions that execute the
+primitive words are in this module. This is by far the largest module
+in Until.
+
+QUOTE.C
+	This module contains the code
+for " and the Forth implementation of printf.
+
+SEAL.C
+	This module has the code to 'seal' an
+application source file.
+
+SENGINE.C
+	This module contains the code
+for the S-Engine SGML document interpreter. Define the SENGINE symbol
+in COMPILER.H to activate.
+
+SEARCH.C
+	The search and replace functions are
+contained in this module.
+
+SHARP.C
+	This module contains the code
+for the Forth <# formatting words.
+
+SYSTEM.C
+	This module contains the code
+for interfacing with the operating system such as getenv().
+
+UNTIL.C
+	This module contains the main
+function. It can be used as an example of calling Until from another C
+function.
+
+USER.C
+	This module builds the dictionary of
+primitives. It essentially ties Forth words to C functions. For
+example, when the word "cls" is executed by the interpreter, the C
+function "clr()" executes. Adding a new primitive is simply a
+matter of writing the C function, the adding a new line in USER.C.
+There is a section in "Write Your Own Programming Language Using
+C++" about adding new Until primitives.
+
+VECTORS.C
+        This module contains the vectored execution I/O primitive word
+definitions. These, of course, are C functions.
+
+VOCAB.C
+        This module contains the code that implements vocabularies.
+
+
+
+The times I have used Until as an embedded application language, C code
+specific to the application have been included in a module named
+"LOCAL.C". This isolates Until code from the application code.
+
+There are several modules in the Until source code. The reasons include
+reduced compile time when changes are made to a small section of code
+and allow for possible custom configuration by leaving out the modules
+not needed for a particular application. Some of the configuration can
+be accomplished via #define statements in COMPILER.H. Future versions
+of Until will include as many configuration options as practical.
+
+__________________________________________________________________
+
+
+Until Internals
+
+The internal operation of Until is described in "Write Your Own
+Programming Language Using C++", [smith1]. This section documents
+changes made to the internal data structures since the book was
+published.
+
+__________________________________________________________________
+
+
+Compiling Until
+
+Compiling Until is relatively easy. Batch files are included to handle
+a variety of operating systems and C compilers with a minimal of manual
+configuration. Much of the compiler selection is built into COMPILER.H.
+
+__________________________________________________________________
+
+MS-DOS
+
+Until compiles under Borland C++ and Turbo C++. A Borland project file
+is not included in the distribution. The primary reason is that the
+location of the compiler related files is embedded in the project file.
+So if I included a project file with the compiler installed on D: and
+your compiler is installed on C:, the first time you tried to compile
+Until a ton of errors would be generated. Since creating a new project
+file from scratch is a 30 second job, no project file is included. Be
+sure to specify large model.
+
+Type tc or bc at the DOS prompt to start Turbo C++ or
+Borland C++ respectively. Create a project file the first time you
+compile Until. The simply press Alt-CM to begin the compile. The Unix
+makefile can be used as a starting point for a makefile for the Borland
+tcc or bcc command line compiler.
+
+There is also a Borland compatible makefile in the distribution called
+makefile.bcc. If you have the command line version of
+Borland/Turbo C++ installed, you can simply type make and
+Until will compile.
+
+__________________________________________________________________
+
+Unix
+
+A fairly generic makefile is included with the Until distribution. It
+works on systems identified in the Ports section.
+(These include Sparc and SGI ANS C and gcc compiler.) The makefile is
+set up to use 'cc' as the compiler. If you use gcc, change the value of
+"CC" to 'gcc'. Type make to build Until. The executable
+file name is "Until" to prevent a name collision with the shell's
+until.
+
+__________________________________________________________________
+
+OpenVMS
+
+OpenVMS runs on both DEC VAX and DEC Alpha computer systems. VAX systems
+typically use VAX-11C and Alpha systems use DEC-C. There are enough
+differences in the two compilers that separate DCL command files
+are supplied for each. The files COMPILE.COM and LINK.COM build
+Until using VAX-C. COMPILEA.COM and LINKA.COM build Until with
+DEC-C. Use the appropriate command files for your configuration.
+
+COMPILE.COM compiles the modules in Until and a
+separate command file, LINK.COM, links the compiled object files. Type
+@COMPILE to compile the source. After the compile process
+finishes, type @LINK to run the linker and create the
+Until executable image. LINK.COM produces UNTIL_V.EXE and
+LINKA.COM creates UNTIL_A.EXE.
+
+__________________________________________________________________
+
+Configuring Until
+
+Most of the configuration of the Until executable is done
+via symbols in COMPILER.H. The configuration symbols are:
+
+- ANSI_CONSOLE
+- C_STRINGS
+- CHECK_MALLOC
+- CIO_MODULE
+- DEBUG_PROG
+- FLOAT_POINT
+- IGNORE
+- NEED_MEMMOVE
+- READABLE
+- REPORT_STARTUP_ERRS
+- SEAL_MODULE
+- SEARCH_MODULE
+- VECTORED_C_IO
+- VECTORED_IO
+
+
+Additionally, symbols that specify the compiler are set. #define
+the symbol to cause code to be included in Until or #undef the
+symbol to ignore it.
+
+
+ANSI_CONSOLE
+	causes a small set of primitive functions
+that output ANSI escape sequences for cursor control. This is
+not as flexible as using termcap or terminfo. The words should
+be usable for a wide variety of systems, since many terminals are
+ANSI compatible, the PC with ANSI.SYS loaded, and Telnet generally
+supports ANSI escape sequences.
+
+C_STRINGS
+        causes the C String library functions to be included in Until
+as primitives.  See C Strings for the complete list of words. This
+module adds about 1300 bytes to the PC .EXE file.
+
+CHECK_MALLOC
+        You have the option of selecting error testing of the return
+value from internal malloc() calls by defining CHECK_MALLOC
+
+CIO_MODULE
+	includes the C File I/O library functions
+into Until as primitives. This module adds about 5500 bytes
+to the PC .EXE file.
+
+DEBUG_PROG
+	controls whether the contents of DEBUG.C is
+compiled into Until. DEBUG.C contains simple C debugging functions
+that are generally not included in production versions.
+
+FLOAT_POINT
+	The floating point package is compiled when
+FLOATING_POINT is #defined. The floating point implementation
+uses C double operations. This initial release contains only the
+basic math operations. It will be expanded in future releases.
+
+IGNORE
+	Never define IGNORE. It is used as a convenient
+way for me to flag unused code in the source that I don't want
+to delete yet.
+
+NEED_MEMMOVE
+	The function memmove() is not available in all C compilers; one
+gcc user on a SparcStation reported that memmove() was not included
+in link libraries and supplied a replacement. Define NEED_MEMMOVE
+if the memmove() is unresolved in the link step. The default
+is #undef.
+
+READABLE
+	There are two approaches to coding many of the
+simple functions that use values from the parameter stack. One,
+the more readable has a local variable or two, calls "popsp()"
+to get the values from the parameter stack, performs the operation,
+and then puts the result back via a call to "pushsp()". This
+is very readable and shows clearly what the intent of the function
+is. This is less than optimal because there are several function
+calls as well as creating a need for C to construct and remove
+a full stack frame.
+
+A second approach is no local variables and either directly
+manipulate the "pstack[]" array, which eliminates both
+local variables and the calls to "popsp()" and "pushsp()".
+This is more efficient, but much less readable.
+
+A third approach in many cases is a nested "pushsp()" call
+with the entire function coded in a single line. This also uses
+no local variables.
+
+The original approach to Until code was to make all of the source
+code as readable as possible, at the expense of efficiency. The
+time has now come to start optimizing Until. I am told that some
+C compilers do not create a stack frame if no local variables
+are used, which should result in even faster code. #define READABLE to
+compile the 'readable' version of the code. Otherwise, more
+efficient code will be substituted. There are only a few
+code optimizations in this version of Until. Expect more and more
+to be added with each release.
+
+REPORT_STARTUP_ERRS
+	This symbol controls whether missing startup files, UNTIL.APP and
+APPLIC.APP, are reported in error messages. You have the option. The
+default is #undef.
+
+SEAL_MODULE
+	Define this symbol to include the seal/unseal
+code. When SEAL_MODULE is defined, UNTIL.BIN is loaded at startup.
+When SEAL_MODULE is not defined, UNTIL.APP is loaded at startup. The
+default is #define SEAL_MODULE. This module adds about 2500
+bytes to the PC .EXE file.
+
+SEARCH_MODULE
+	Define SEARCH_MODULE to include the search
+and replace code. This code is loosely based on the concept of sub and
+gsub from AWK. This code is frequently used for file filters. The
+default is #define SEARCH_MODULE. This module adds approximately
+2000 bytes to the PC .EXE file.
+
+VECTORED_C_IO
+	Define this symbol causes all C-level console
+I/O functions to be vectored. The default action is identical to
+the non-vectored version, so unless you plan to actually revector
+the I/O, it is more efficient not to define VECTORED_C_IO. This
+code was contributed by Skip Carter.
+
+VECTORED_IO
+	This symbol sets up vectored execution for a
+number of words. The default is #undef. See the discussion on
+for details of how Until implements
+vectored I/O execution.
+
+
+
+__________________________________________________________________
+
+
+                       7. PROGRAM DEVELOPMENT
+
+This section gives some hints for program development with Until. As
+I use Until more and more, the more I believe that Until is a unique
+and very powerful approach to program development. There are several
+possible approaches for developing Until applications. These include:
+
+- Code Forth programs
+- Code C functions tied together with Forth macros
+- As a macro language embedded in some larger application
+
+
+Because of the completely different Until development options, System
+development must be approached from a slightly unconventional approach.
+(Does this surprise you?) The first decision is which approach to
+follow. Is application is going to be written directly in Until or to
+use Until as a macro language only. If you choose to write code in C,
+the question of coding style arises. You can make the C code look a lot
+like Forth. After all, "dup()", "over()", "swap()," etc are all
+available as C functions. Or do you manipulate the data structures
+directly. Someone who knows Forth and not C will probably choose to use
+Until as merely another Forth compiler and the fluent C programmer will
+probably code large portions in C.
+
+__________________________________________________________________
+
+What You Need
+
+The absolute minimum needed to run Until is until.exe. Running
+an application written in Until requires until.exe and an
+application file; applic.app by default. The application file
+can be specified on the command line or sealed into until.bin.
+
+An application is generally kept in a .APP file during development
+then sealed into a .BIN file for distribution. The advantages of
+sealing an application include:
+
+- .BIN files are smaller than their corresponding .APP file
+- .BIN files load slightly faster than .APP files
+- The use cannot modify a .BIN file
+
+
+The process of sealing an application is
+relatively simple. First, run Until. At the initial program prompt,
+type:
+
+  seal applic.app
+
+
+applic.bin is created from applic.app.
+
+
+__________________________________________________________________
+
+Forth Programming
+
+The bibliography identifies several good Forth resources, including
+books. Forth is a simple stack oriented, interactive programming
+language. It uses an RPN syntax ala HP calculators. General practice
+includes writing small words that do only one function, such as open a
+file or comparing a string. Test each word individually. In other
+words, write a few lines of code, then test it. That way, Forth words
+become building blocks that construct your application. This is an
+incredibly productive approach once you get past the learning curve.
+
+Until is integrated with the OS from the Forth point of view. Program
+development can be done entirely within Until provided you are writing
+Forth code. Source can be edited, compiled, and tested without exiting
+back to the native OS as long as you don't crash the system. The
+following commands are available for development:
+
+- include sourcefile - Compile from "sourcefile".
+- forget wordname - Forget words back to and including "wordname".
+- { sourcefile} edit - Edit "sourcefile" with your editor.
+- dir - List files in the current directory.
+
+
+See the section on Operating System Words for more OS specific words.
+
+
+__________________________________________________________________
+
+
+Getting Along Without DOES>
+
+Most Forth compilers includes a word, "DOES>" that is used
+to create new classes of words. For example:
+
+  create array
+       4 * allot
+  does>
+       4 * @ + ;
+
+
+builds a new defining word, "array", that defines an array of
+integers. An array is the defined as:
+
+  10 array vector
+
+
+40 bytes of memory would be allocated in the dictionary at compile
+time. At run time, the array entry number is converted to the
+address of the nth element and returned to the stack. Thus,
+
+  2 vector
+
+
+returns the address of the third element in the array. (The array
+is zero based in the example.)
+
+The magic of Forth's "create ... does>" is the creation
+of new word types or classes. Words that use "create ... does>"
+compile a new word that has separate compile-time (from the
+"create" to the "does>") and run-time (from the
+"does>" to the end of the definition).
+
+In Until, the approach is writing a C function for the
+compile-time action and a separate function for run-time. The
+compile-time
+function, something like Compile_array() is bound to "array"
+as an immediate word by calling build_iprim() in USER.C. The run-time
+C function is bound to the Until word via build_prim(), also
+in USER.C.
+
+Until's equivalent to DOES> is not quite as convenient traditional
+Forth's, but it gets the job done!
+
+
+__________________________________________________________________
+
+C Applications
+
+Writing applications from the C prospective can lead to innovative
+applications. This approach allows those more comfortable with C than
+Forth to effectively utilize some of Forth's interactive nature. The
+bulk of your application code is coded as normal C functions using the
+proscribed interface to Until. (See Chapter 10 of <A
+HREF="&SMITH1;">[SMITH1] for more detailed discussions about adding
+new C primitives to Until.) "pushsp()" and "popsp()" are used
+to pass parameters from Forth to C functions.
+
+
+__________________________________________________________________
+
+
+Embedding Until
+
+Until is designed from the ground up to be embedded in other application
+programs. A particularly good use is letting Until be the ``macro''
+language for an application. If conditionals and looping are not
+required, much of the internal Until code can be eliminated. The user
+could build what are logically equivalent to display or execution list
+macros. These macros are really Forth words, but the RPN nature of
+Forth can easily be hidden from the user. One application I built had
+only about a dozen primitives available to the user, but the whole
+application was driven by user written macros. It was an elegant and
+simple solution. The final executable file was only 37k after removing
+unused internal Until code.
+
+The mechanics of embedding Until in an application is covered
+in [SMITH2] and therefore only mentioned in
+passing here.
+
+- Write new primitives in C/C+
+- Add a line in "make_prims()" for each new primitive
+  ("make_prims()" is in USER.C.)
+- Modify the outer interpreter to mesh with the application
+- Compile Until with the application
+
+
+The process is almost as simple as it sounds. However, please
+keep the application code completely separate from Until code. Simply
+providing a couple of interface points is all that is really necessary.
+The next major release of Until will re-arrange the files slightly
+to make this a natural thing to do. The files LOCAL.H and LOCAL.C
+are the first step in this direction. There are several reasons
+for separating the code. These include:
+
+- It will be much easier to incorporate future Until updates
+- Separate code prevents the possibility of bugs creeping into
+  Until code from the application
+- Code ownership is much easier to establish
+
+
+When writing small applications it is easy to add a couple of variables
+to LOCAL.H and a function or two to LOCAL.C. I did this on the first
+large application that I built up on top of Until. I made a special
+effort to go back and clearly separate the Until code from the
+application code. That way, I could supply an Until object library
+instead of source code to the customer. Besides, it is just good
+programming practice.
+
+The ease with which new primitives can be added to Until is and will
+probably remain one of the primary advantages that it has over any of
+its rivals; a new primitive can be added in just a couple of minutes
+excluding C compile time.
+
+__________________________________________________________________
+
+
+Embedding Details
+
+#### UPDATE ####
+
+This section contains the second cut at detailed instructions for
+embedding Until in another application. The problem is that with
+every release, things evolve. So, while the details published
+with the previous release may not be wrong, they are not 100% up
+to date at this point.
+
+One big change since V2.2 is the addition of a hook at the end of
+the Outer Interpreter to call a user supplied function. This provides
+a convenient place to perform initialization after an ABORT.
+
+
+- At the beginning of your main(), call save_args(argc,argv).
+This preserves the command line arguments and sets some
+global variables.
+- Call startup() the first time you want to run Until. startup()
+builds the primitives and does a cold start.
+- Include a 'bye' word at the end of UNTIL.BIN or in the last
+application word to return control to main().
+- Push any arguments the word needs onto the parameter stack
+via calls to pushsp().
+- Each subsequent call is Until("word"); where "word" is
+the name of the word to execute. This is <outer> for the
+outer interpreter.
+- Values are returned on the parameter stack. Each call to
+popsp() gets a single return value.
+
+
+Note that each call to outer() does a warm start, which clears the
+parameter stack.  Until's main() is set up this way. Refer to it as an
+example.
+
+__________________________________________________________________
+
+Development Style
+
+Application development style is mentioned in the main description for
+this chapter. This section attempts to address style is some detail.
+Until is unique and takes some additional thought to take fullest
+advantage of what we have here for developing applications.
+
+The picture in my mind is going to be hard to describe. When
+writing a Forth program, the programmer sits at the computer
+with the vendor supplied Forth manual and maybe a
+copy of "Starting Forth" for reference
+when coding.
+
+A C programmer also has reference material close at hand too,
+probably a copy of "The C Programming Language"
+and the function library manual when coding. When coding in
+either language deciding on program partitioning is a matter of
+figuring out what module a word or function logically belongs
+in.
+
+Developing an Until application that takes fullest advantage
+of the marriage between Forth and C has an additional level
+of development decisions. Should this operation be a Forth
+word or a C function? How are the C and Forth pieces going
+to interface? What primitives should the user be
+allowed to see? Conscious effort is required for language
+choice on a function by function basis, instead of once for
+the whole application. I believe this is a very powerful
+combination with a great deal of potential, but it is an
+art for the time being.
+
+Part of the ``art'' is deciding what Forth words the user
+can access to build application macros. Some applications
+require a relatively complete language but, many can get by with
+only a handful. One system I built around Until contained
+only eight to ten words. The system was customizable, quite
+powerful, and simple from the user prospective.
+
+Since Until based applications are really C programs with user
+macros (at least that is what the customer thinks...), calling
+the user level word set a ``language'' has always had bad
+connotations in my mind. First, I don't want the customer
+asking me what the macro language is. Secondly, calling
+it an application language will probably confuse more
+users than help describe what it is.
+
+While rereading "Thinking Forth" [BRODIE1],
+I ran across the term ``lexicon''. Brodie uses lexicon to describe the
+application specific set of words the user has access to. In my mind,
+it describes exactly the situation of Until being embedded in an
+application. The user has a lexicon of application specific commands to
+construct macros with. Learning a few simple commands is perceived as
+much easier than learning a new language by users.
+
+The point of this whole rambling dissertation is that designing
+the user lexicon is an important part of building an application
+around Until. In turn, I believe this is where much of the
+potential power of Until as an application development tool
+comes from.
+
+__________________________________________________________________
+
+
+Multiple Interpreters
+
+Until makes writing applications with multiple interpreters trivial.
+The normal Until outer interpreter is only about half a page of code.
+Writing a specialized interpreter for an application is a very powerful
+capability. The core interpreter can be used as a starting point for
+other any specialized interpreter.
+
+A typical approach is using the normal Until interpreter for startup to
+load the application (.APP) file, then invoke the application specific
+interpreter. The is the approach take for the IFP program in <A
+HREF="&SMITH2;">[SMITH2].
+
+#### UPDATE ####
+
+Another successful multi-interpreter application is a document
+interpreter for Standard Generalized Markup Language
+(SGML) documents. A document viewer was easily built
+on top of the SGML interpreter that executes the document as a program
+to format and display the document's contents. This software is
+available via anonymous FTP at FTP.IFI.UIO.NO in the
+directory /pub/SGML/Demo/. The files are sengine.zip for the SGML
+document interpreter and sviewer.zip for the SGML document viewer.
+
+__________________________________________________________________
+
+
+SEALING AN APPLICATION
+
+The rough equivalent of saving a turnkey application is sealing an Until
+program. Sealed applications have the code hidden or 'sealed' from the
+user. Sealing does not save the current state of the system the way
+most traditional Forths do. The approach taken for Until is to encrypt
+the source code then load it in the crypted form. The last thing in the
+file must be the word that executes the application.
+
+Sealing an application is done with the "seal" word:
+
+
+  seal until.app
+
+
+The file UNTIL.BIN is created in this case.
+
+"seal" is crude, but effective. There appears
+to be not good way to save the state of the dictionary that is not too
+complex and portable. There are several enhancements that could be made
+to "seal". These include:
+
+- Accepting multiple input files
+- Appending to an existing .BIN file
+- True file compression, such as Hoffman encoding
+
+
+A word, "unseal", is included to allow you to view the result
+of "seal". If you are distributing sealed code, you might want
+to disable "unseal".
+
+
+  unseal until.bin
+
+
+__________________________________________________________________
+
+VOCABULARIES
+
+This section does not detail the Until implementation of
+vocabularies; rather it simply identifies the words that are affected by
+vocabulary operations. i.e. If you change anything relating to
+vocabularies, count on having to change these words too!
+
+- words
+- -find
+- prim_find()
+- create
+- cold
+- forget
+
+
+Refer to the code in VOCAB.C for implementation details. The Until
+vocabulary structure is based on the Fig-Forth
+model rather than Forth-83.
+
+
+
+__________________________________________________________________
+
+
+8. C-LEVEL VECTORED I/O
+
+This section describes the C-level I/O vector features in Until.
+Skip Carter originally supplied these changes. C I/O vector code is
+activated by defining the symbol VECTORED_C_IO in COMPILER.H. Including
+this code slows normal processing slightly because some additional
+function calls are made and there is a level of indirection to
+all writes to the screen, whether informational messages or
+Forth console output words such as "type" or "emit"
+also are slower.
+
+Two typical uses of this code are directing output to a file
+or communicating across a network. Skip original test program
+set up a socket network interface and ran Until on a remote
+computer.
+
+The general scheme is to set the vectors using the
+"user_outer_hook()" function to set up the vectors. The
+vectors are "stdout_vect", "stderr_vect", and
+"stdin_vect".
+
+The Forth words affected by VECTOREC_C_IO are:
+
+- emit
+- printf
+- .
+- type
+- cr
+- ."
+- abort"
+- .(
+- key #### CHECK ON ####
+
+
+Those are the hints; implementation details are left to the
+reader. (Hopefully, I'll fill in some details in a
+future update.)
+
+__________________________________________________________________
+
+
+                             9. S-Engine
+
+S-Engine is a Standard Generalized Markup Language (SGML) document
+interpreter that embeds Until to form a powerful scripting language
+for processing SGML documents. SGML is ISO Standard 8879:1986 and
+is widely used by both government and industry.
+
+SGML is a language for defining document markup languages. Think of
+a markup language for memos for example. You define tags for
+<from>, <to>, <subject>, etc. SGML markup
+languages generally defines
+document structure rather than document format. There are exceptions.
+HTML is an SGML defined markup language that defines electronic
+document format rather than structure.
+
+S-Engine reads the SGML file, extracts tags, then executes them
+as a word. There is a very structured scheme for using S-Engine.
+Each SGML element is treated as an event where SGML data is
+collected or processed. The general scheme is:
+
+
+- Define a string variable for each element that contains
+data. Wrapper elements do not need strings.
+- Define colon definitions for each the start and
+end element tags.
+- The start tag must be in <...>, i.e. <name>.
+- The end tag name must be in </...>, i.e. </name>
+- The colon definition for the start tag must specify
+the SGML input buffer by calling "read_into". For
+example, : <name>  name read_into ;
+- SGML attributes must have a string variable defined.
+- The attribute variable name must start with the element
+name it applies to, followed by a `.', followed by the
+attribute name. An attribute called `type' for element <name>
+requires a string variable named name.type. Be sure that
+the string is large enough to hold the data collected by
+"read_into".
+- The attribute value is available when the element word
+executes. In <name type="xxx">, the "xxx" is available
+when <name> executes.
+- SGML general entity substitution is done by defining a
+colon definition. The first character must be an `&' and the
+last character must be `;'. The body of the of the definition
+should include a string with the substitution value. For
+example, : &Forth;  " Until" ;. Whenever "&Forth;" occurs
+in the input stream, "Until" is substituted in the SGML
+buffer.
+- Specify the SGML file with sengine_init.
+- Start S-Engine execution with sengine.
+- Use wrapper tags to do most of the processing.
+
+
+Now let's see a simple example. This code can be found in
+the files SGMLEX.APP and SGMLEX.SGM. There is only one element,
+element, one attribute, attrib, and one entity,
+SGML. So, the following variables must be set up:
+
+
+  4096 string element
+  32   string attrib
+
+
+Now, define the element and entity colon definitions:
+
+
+  : <element>
+     element read_into
+     ." Got element..." cr
+     ."   attrib is " attrib dup strlen type cr
+     ;
+  : </element>
+     ." The SGML data collected in element is: " cr
+     element dup strlen type cr
+     ;
+  : &SGML;
+     " Standard Generalized Markup Language"
+     ;
+  " sgmlex.sgm" sengine_init
+  sengine
+
+This is all there is to it. Assume the input of:
+
+<element attrib="an example">This is an example
+&SGML; test file. It is really simple, but
+illustrates how an S-Engine program works.
+</element>
+
+will produce the following:
+
+Got element...
+  attrib is an example
+This is an example
+Standard Generalized Markup Language test file. It is really simple, but
+illustrates how an S-Engine program works.
+
+
+There is a complete example in the sample files.
+
+
+__________________________________________________________________
+
+
+                       10. SAMPLE UNTIL SOURCE FILES
+
+This section identifies and describe the sample Until source files.
+Some, but not all of these files are described in various places in
+this manual. I figured the more examples the better, so I included
+extra files in the distribution.
+
+
+ADD.APP       	A filter program that adds a file of numbers.
+ADDR.APP      	An S-Engine application to print an address book.
+ADDRESS.APP   	An S-Engine application to convert the address book into HTML.
+APPLIC.APP    	A simple default application file.
+FILEXAMP.APP  	The File Word example code from the Ref Manual.
+FILTER.APP    	Sample file filter.
+HELP.APP      	The help file used inside Until.
+PCOLON.APP    	Sample Until program to print all colon definitions in a source file.
+SPLITHTM.APP  	Sample Until program that splits up large HTML files.
+STOIC.APP     	The Stoic String package.
+STREXAMP.APP  	C String example from the documentation.
+UNTIL.APP     	Default, minimal startup code. It is sealed into UNTIL.BIN.
+
+
+
+
+-------------------------------------------------------------------
+
+
+                                11. WORD GLOSSARY
+
+The word glossary is the core of Forth documentation. No program
+is complete without it. Until is no exception. This chapter has
+a complete word glossary and several smaller, specialized
+glossaries on specific
+subject areas, such as files. The main word glossary contains the
+word descriptions and the specific glossaries contains complete
+code examples.
+
+__________________________________________________________________
+
+Notational Conventions
+
+Each glossary entry first line contains the word
+name and the stack comment. Short examples are included in many cases.
+Word pronunciation is enclosed in double quotes at the start of the
+description. A stack comment is enclosed in parens:
+
+
+      ( input &action; result )
+
+
+The "&action;" represents the action of the word. Input and result can be:
+
+
+- n - integer number
+- d - double integer number
+- t - true
+- f - false
+- tf - true or false
+- addr - address
+- c - character
+- len - length
+- A single quote in a stack comment means "address of". For example:
+
+
+      ( 'string &action; )
+
+
+
+is pronounced "address of string".
+
+__________________________________________________________________
+
+S-Engine Words
+
+This section identifies the words that are specific to the S-Engine
+SGML document interpreter. It is not included in this manual.
+
+__________________________________________________________________
+
+append_this
+( 'string --- )
+"append-this". Append the string whose address is on the top of
+the stack to the current SGML buffer.
+
+   " this is a test" append_this
+
+
+__________________________________________________________________
+
+clear_read
+( --- )
+"clear-read". Resets the current SGML input buffer, "this_field",
+to a small scratch buffer. It cannot be simply set to zero just in case
+more data is collected.
+
+__________________________________________________________________
+
+read_into
+( 'string --- )
+"read-into". Set SGML input buffer pointer to the string whose
+address is on the top of the stack. SGML input will be collected
+into this buffer until changed. It is very important that the
+allocate length of "'string" be long enough to hold the
+text being collected into it.
+
+   500 string trash
+   ...
+   trash read_into
+
+
+__________________________________________________________________
+
+sengine
+( --- )
+"s-engine". Interpret the SGML document opened by a previous call
+to "sengine-init". Each SGML tag is extracted then executed.
+
+__________________________________________________________________
+
+sengine_init
+( 'SGML-file --- )
+"s-engine-init". Open the SGML file whose name is specified by
+the string whose address in on the parameter stack. The SGML
+filename can be passed as a string:
+
+   " anyfile.sgm" sengine_init
+
+
+__________________________________________________________________
+
+this_field
+( --- 'string )
+"this-field". The current SGML input buffer is "this_field".
+It is normally set by "read_into". All text up to the next
+SGML tag is collected in the buffer pointed to by "this_field".
+
+__________________________________________________________________
+
+S-ENGINE EXAMPLE
+
+The previous section describes the processing mechanisms of
+S-Engine. This section describes a simple, but complete
+S-Engine application. The file, ADDRESS.DTD, is an SGML Document
+Type Definition (DTD) that describes an address book document. It
+describes the structure of and markup (elements) that appear in the
+SGML instance (document) for an address document type.
+
+The file ADDRESS.SGM is a document instance. It is a valid SGML
+file that can be validated using an SGML parser and ADDRESS.DTD.
+That level of SGML processing is beyond the scope of this manual.
+Here we are only interested in processing ADDRESS.SGM with S-Engine.
+
+The example S-Engine program, ADDRESS.APP, converts the SGML file,
+ADDRESS.SGM, to HTML suitable for viewing on a Web Server with
+Mosaic or NetScape. ADDRESS.HTM is also a valid SGML file that is
+described by a DTD and can be validated or processed with any SGML tool.
+
+The overall strategy of the program is to collect text for a complete
+address record, then process the text when and end of record tag
+(</entry>) executes.
+
+The file structure is straight forward.  The entire file is wrapped up
+by the address tags, <address> and </address>.  Each address
+record is wrapped by the entry tags, <entry> and </entry>.
+This SGML design allows the wrapper tags to be used as "triggers" to
+initiate processing at defined points in the file.
+
+The ADDRESS.APP code contains comments with Section numbers that
+correspond to the descriptions that follow.
+
+- Miscellaneous variables are defined in Section 1.
+- Section 2 defines string variables for each
+element to be read into.
+- Section 3 words are generic I/O related
+processing words.
+- Section 4 words output most of the fixed information
+into the output file, ADDRESS.HTM.
+- Much of the actual work is performed in Section 5 of the program.
+The <address> tag triggers opening the output file, ADDRESS.HTM, and
+writing the HTML header information. </address> closes the output file.
+</entry> formats and writes text collected from each tag.
+- Section 6 contains code to collect text from each tag.
+- Finally, Section 7 contains the code to start S-Engine. The call to
+"sengine_init" opens the input SGML file. "sengine" actually
+starts the document interpreter.
+
+
+One of the beauties of SGML is the structure defined by the element tags
+can be used to key processing from.
+
+Here is the code for ADDRESS.APP:
+
+\ Address book - S-Engine Demo
+\ ====================================================================
+\				SECTION 1
+\ ====================================================================
+
+variable fd.out
+
+10   constant <nl>
+
+4096 string out.buf
+
+\ ====================================================================
+\				SECTION 2
+\ ====================================================================
+80 string name
+32 string bphone
+32 string aphone
+32 string hphone
+32 string fax
+80 string title
+80 string category
+80 string company
+80 string addr1
+80 string addr2
+80 string city
+80 string st
+16 string zip
+4096 string note
+\ ====================================================================
+\				SECTION 3
+\ ====================================================================
+: clear		( address --- )
+   0 swap c!
+   ;
+: -newline		( 'string --- )
+   dup strlen + 1- 		\ Calc address
+   dup c@ <nl> =		\ Compare last char to newline
+   if
+     0 swap c!			\ yes, trash it
+   else
+     drop
+   endif
+   ;
+: output.line		( ?? 'string --- )
+   fd.out @ fprintf
+   ;
+: msg 		 ( 'string --- )
+   dup strlen type
+   ;
+\ ====================================================================
+\				SECTION 4
+\ ====================================================================
+: clear.fields		( --- )
+   name clear      bphone clear
+   aphone clear    hphone clear
+   fax clear       title clear
+   category clear  company clear
+   addr1 clear     addr2 clear
+   city clear      st clear
+   zip clear       note clear
+   ;
+: setup.HTML
+   " <HTML>\n"   output.line
+   " <HEAD><TITLE>SGML Address Book</TITLE></HEAD>\n"  output.line
+   " </HEAD>\n"  output.line
+   " <BODY>\n"   output.line
+   ;
+: process.name
+   " <HR>\n" output.line
+   name strlen 0>
+   if    ( There is a name field )
+      out.buf name strcpy
+   else  ( use the company name  )
+      out.buf company strcpy
+      company clear
+   endif
+   out.buf output.line
+   ;
+: process.phones
+   " <DL>\n" output.line
+   bphone strlen 0>
+   if    bphone " <DT>Bus.: <DD>%s\n" output.line  endif
+   hphone strlen 0>
+   if    hphone " <DT>Home: <DD>%s\n" output.line  endif
+   fax strlen 0>
+   if    fax    " <DT>Fax : <DD>%s\n" output.line  endif
+   aphone strlen 0>
+   if    aphone " <DT>Alt : <DD>%s\n" output.line  endif
+   " </DL>\n" output.line
+   ;
+: process.the.rest
+   " <P>\n"   output.line
+   title   strlen 0>   if title   " %s<BR>\n" output.line endif
+   company strlen 0>   if company " %s<BR>\n" output.line endif
+   addr1   strlen 0>   if addr1   " %s<BR>\n" output.line endif
+   addr2   strlen 0>   if addr2   " %s<BR>\n" output.line endif
+   city    strlen 0>
+   if
+     city st zip " %s, %s  %s<BR>\n" output.line
+   endif
+   note    strlen 0>   if note    " <P>\n%s<BR>\n" output.line endif
+   clear.fields
+   ;
+\ ====================================================================
+\				SECTION 5
+\ ====================================================================
+: <ADDRESS>
+   cr ." The SGML-based Address Book" cr cr
+   " address.htm"  WRITE fopen
+   fd.out !
+   setup.HTML
+   clear.fields
+   ;
+: </ADDRESS>
+   " </BODY>\n"  output.line
+   " </HTML>\n"  output.line
+   fd.out @ fclose
+   ;
+
+: <ENTRY> ;
+: </ENTRY>
+   process.name
+   process.phones
+   process.the.rest
+   ;
+
+\ ====================================================================
+\				SECTION 6
+\ ====================================================================
+: <NAME>	name read_into    ;
+: </NAME>	name -newline
+name msg cr ;
+
+: <BPHONE>	bphone read_into  ;
+: </BPHONE>	bphone -newline ;
+
+: <APHONE>	aphone read_into  ;
+: </APHONE>	aphone -newline ;
+
+: <HPHONE>	hphone read_into  ;
+: </HPHONE>	hphone -newline ;
+
+: <FAX> 	fax read_into     ;
+: </FAX>	fax -newline    ;
+
+: <TITLE>	title read_into   ;
+: </TITLE>	title -newline  ;
+
+: <CATEGORY>	category read_into  ;
+: </CATEGORY>	category -newline ;
+
+: <COMPANY>	company read_into   ;
+: </COMPANY>	company -newline  ;
+
+: <ADDR1>	addr1 read_into     ;
+: </ADDR1>	addr1 -newline    ;
+
+: <ADDR2>	addr2 read_into     ;
+: </ADDR2>	addr2 -newline    ;
+
+: <CITY>	city read_into      ;
+: </CITY>	city -newline     ;
+
+: <ST>		st read_into        ;
+: </ST>		st -newline       ;
+
+: <ZIP>		zip read_into       ;
+: </ZIP>	zip -newline      ;
+
+: <NOTE>	note read_into      ;
+: </NOTE>	note -newline     ;
+\ ====================================================================
+\				SECTION 7
+\ ====================================================================
+: &amp;		" &" ;
+: <		" <" ;
+: >		" >" ;
+
+" address.sgm" sengine_init
+sengine
+
+
+
+__________________________________________________________________
+
+
+File I/O Words
+
+The set of file words implemented in Until follows C conventions.  In
+fact, most of the words use the same names as the equivalent C
+functions.  If there are questions about calling sequences, refer to a C
+function reference manual.  The code for the words documented here is
+found in FILE.C.  The way each of these words operates is to collect the
+arguments from the stack, then call the corresponding C function.  The
+Until word, "errno" returns the value of the C global variable
+"errno".  Any questions about word behavior can be answered by
+looking up the equivalent C function in the C compiler documentation.  A
+file descriptor is the result of a call to "fopen".  The file
+descriptor is indicated by "fd".  The file related words are:
+
+__________________________________________________________________
+
+fclose
+( fd --- )
+"f-close". Close the file whose file descriptor is "fd".
+
+      " test.fil" READ fopen  descriptor !
+        ...
+      descriptor @ fclose
+
+
+__________________________________________________________________
+
+fcr
+( fd --- status )
+"f-c-r". Write a carriage return (well actually a newline) to the output
+file specified by "fd".
+
+      descriptor @ fcr
+
+
+__________________________________________________________________
+
+feof
+( fd --- 0|eof )
+"f-e-o-f". Test the specified stream, "fd", for end of file. A
+zero return means not at EOF. Eof is returned if the last file operation
+encountered end of file.
+
+  descriptor @ feof
+        if   ." Got eof"
+        else ." Not eof" then
+
+__________________________________________________________________
+
+ferror
+( fd --- tf )
+"f-error". This word tests the file stream for read or write error. FALSE
+means no error and TRUE indicates an error has occurred.
+
+        descriptor @ ferror
+        if   ." File error"
+        else ." No error" endif
+
+__________________________________________________________________
+
+fflush
+( fd --- )
+"f-flush". This word flushes the system output buffer for the file
+specified by "fd". The file must have been opened previously by a call
+to "fopen".
+
+        descriptor @ fflush
+
+__________________________________________________________________
+
+fgetc
+( fd --- c )
+"f-get-c". Read the next character from the file specified by
+the file descriptor "fd". The value is true (-1) on End of File.
+
+        descriptor @ fgetc
+
+__________________________________________________________________
+
+fgets
+( addr size fd --- count )
+"f-get-s". Read the next string of a max length of "size"
+into the buffer at
+"addr" from file "fd". The count is the number of bytes actually read
+or 0 for End of File. A "string" is logically a line in the file. The
+trailing newline character is included in the result string. "fgets"
+reads up to the new line character.
+
+        buffer size descriptor @ fgets
+        0= if ." EOF" then
+
+Note that buffer is a counted string. The trailing <newline>
+is included in the buffer and a trailing NULL is included so buffer
+may be treated as either a NULL terminated or counted string. The
+string size is meaningless when the buffer is greater than 255
+bytes.
+__________________________________________________________________
+
+fnsplit
+( 'filename  --- 'drive 'dir 'file 'ext )
+"f-n-split". Break the filename contained in the string whose address
+is on the top of the stack into its component parts.
+
+        " c:\until\outer.c" fnsplit
+        .( Extension> ) dup strlen type cr
+        .( File     > ) dup strlen type cr
+        .( Dir      > ) dup strlen type cr
+        .( Drive    > ) dup strlen type cr
+
+
+__________________________________________________________________
+
+fopen
+( 'filename 'fmode --- fd )
+"f-open". Open the file whose name is stored in "'filename" and has a
+"fmode" of BINARY, READ, WRITE, or APPEND. The file descriptor,
+"fd", should be saved and is used by most of the other file words to
+refer to the file.
+
+
+      " name" READ fopen
+
+
+The predefined modes are:
+
+- READ
+- WRITE
+- APPEND
+- BINARY
+
+
+__________________________________________________________________
+
+fprintf
+( a1 a2 ... an 'format fd --- )
+"f-print-f". This is the C fprintf() function. The top of the stack
+contains a file descriptor, fd, followed by the format
+string, 'format. 'format is a C fprintf() format string
+such as:
+
+   " A string: %s  or a decimal number: %d"
+
+The arguments to fprintf are in the order used. For example:
+
+   " string" 65 " A string: %s  or a decimal number: %d\n" fd @ fprintf
+
+will write:
+
+   A string: string  or a decimal number: 65
+
+with a trailing newline character to the file descriptor fd. The
+first argument goes with the first format specifier (" string" and the
+%s) and the second argument goes with the second format specifier
+(65 and %d) in this case.
+
+Note that floating point values cannot be used with fprintf. Use
+fprintf_f to output floating point values.
+
+__________________________________________________________________
+
+fprintf_f
+( a1 a2 ... an 'format fd --- )
+"f-print-f-underscore-f". This is the C fprintf() function.
+fprintf_f can only be used to out floating point values.
+The top of the stack
+contains a file descriptor, fd, followed by the format
+string, 'format. 'format is a C fprintf() format string
+such as:
+
+   " A floating point number: %e"
+
+The arguments to fprintf_f are in the order used. For example:
+
+   f# 123.456 " A floating point number: %e\n" fd @ fprintf_f
+
+will write:
+
+   A floating point number: 123.4560
+
+with a trailing newline character to the file descriptor fd. The
+first argument goes with the first format specifier (123.456 and the
+%e).
+
+Note that only floating point values can be used with fprintf_f. Use
+fprintf to output other values.
+
+__________________________________________________________________
+
+fputc
+( ch fd --- status)
+"f-put-c". Write the character, "ch", to the file whose descriptor is
+"fd". The status of the write is returned. The status is either
+the character on a successful write or EOF on error.
+
+__________________________________________________________________
+
+fputline
+( 'string fd --- status )
+"f-put-line". Write the string whose address is next to the top of the
+parameter stack to the file whose file descriptor, "fd", is
+on the top of the stack. A <newline> is appended to the string
+before being written. "status" is EOF when an error occurs.
+(See "fcr").
+
+__________________________________________________________________
+
+fputs
+( 'buffer fd --- status )
+"f-put-s". Write the string whose address is specified by "buffer"
+to the file descriptor, "fd". "status" is the last character
+written on success or EOF on error.
+
+__________________________________________________________________
+
+fread
+( addr len fd --- status )
+"f-read". Read a block of data from a disk file. This word eventually
+calls fread(). It reads "len" bytes into the buffer that
+starts at "addr". The status is the number of bytes read on
+success or zero for end of file.
+
+__________________________________________________________________
+
+fseek
+( whence offset fd --- status)
+"f-seek". This word positions the file, "fd", to the offset
+specified by "offset". The offset is not necessarily the
+relative number of bytes from the beginning of the file. "whence"
+can be:
+
+
+  0 Beginning of the file (SEEK_SET)
+  1 From the current file position (SEEK_CUR)
+  2 End of the file (SEEK_END)
+
+
+The status is zero on success and non-zero on error. DOS only
+returns an error when attempting to position a file that has
+not been opened. Other operating systems may return additional
+errors.
+
+__________________________________________________________________
+
+ftell
+( fd --- offset)
+"f-tell". Return the file offset for the file specified by "fd".
+An offset of -1 indicates an error. Most C compilers return the number
+of bytes from the beginning of the file, but this is not
+guaranteed!
+
+__________________________________________________________________
+
+fwrite
+( addr len fd --- status )
+"f-write". Calls the C function "fwrite()". It writes the
+buffer at "addr" for a length of "len" bytes to the
+file specified by "fd". Status is the number of bytes
+written or zero for an error. "fwrite" writes from the current
+position in the file.
+
+__________________________________________________________________
+
+printf
+( a1 a2 ... an 'format fd --- )
+"print-f". This is the C printf() function. The top of the stack
+contains a format
+string, 'format. 'format is a C printf() format string
+such as:
+
+   " A string: %s  or a decimal number: %d"
+
+
+The arguments to printf are in the order used. For example:
+
+   " string" 65 " A string: %s  or a decimal number: %d\n" printf
+
+
+will write:
+
+   A string: string  or a decimal number: 65
+
+
+with a trailing newline character to STDOUT. The
+first argument goes with the first format specifier (" string" and the
+%s) and the second argument goes with the second format specifier
+(65 and %d) in this case.
+
+Note that floating point values cannot be used with printf. Use
+printf_f to output floating point values.
+
+__________________________________________________________________
+
+printf_f
+( f1 f2 ... an 'format --- )
+"print-f-underscore-f". This is the C printf() function.
+printf_f can only be used to out floating point values.
+The top of the stack contains a format
+string, 'format. 'format is a C printf() format string
+such as:
+
+   " A floating point number: %e"
+
+The arguments to printf_f are in the order used. For example:
+
+   f# 123.456 " A floating point number: %e\n" printf_f
+
+will write:
+
+   A floating point number: 123.4560
+
+with a trailing newline character to STDOUT. The
+first argument goes with the first format specifier (123.456 and the
+%e).
+
+Note that only floating point values can be used with printf_f. Use
+printf to output other values.
+
+__________________________________________________________________
+
+SEEK_CUR
+( --- 1 )
+"seek-cur". Sets seek mode relative to the current file position. Use
+with "fseek".
+
+__________________________________________________________________
+
+SEEK_END
+( --- 2 )
+"seek-end". Sets seek mode relative to end of file. Use with "fseek".
+
+__________________________________________________________________
+
+SEEK_SET
+( --- 0 )
+"seek-set". Sets seek mode to beginning of the file. Used with "fseek".
+
+
+__________________________________________________________________
+
+File Examples
+
+Some examples are useful here.
+The following code segment types the
+contents of "CALC.APP" to the screen:
+
+Note:
+The code down to ">here" is assumed for all of the examples in
+this section.
+
+
+(  file.fth )
+
+-1 constant true
+ 0 constant false
+
+variable fin
+variable inbuf 100 allot
+
+: list.file             ( --- )
+   " calc.app" READ fopen    fin !
+   begin
+     inbuf 80 fin @ fgets
+     if    ( Not EOF )
+       inbuf count type
+       false
+     else   ( EOF )
+       true
+     then
+   until
+   fin @ fclose
+   ;
+
+
+list.file opens the file, calc.app, for READ access. "fopen"
+expects the filename address on the stack. The " compiles the filename
+into the dictionary. "fopen" returns the file descriptor, which is
+saved in "fin". The file descriptor should really be checked for
+error before continuing. The loop reads each line into "inbuf" and
+types the contents to the screen. "fgets" returns the length of the
+line or zero at end of file. The loop exits on end of file and closes
+the file.
+
+The next example copies a file, one character at a time. The code assumes
+the same variables etc from the previous example exist.
+
+
+-1 constant true
+ 0 constant false
+
+variable fout
+variable fin
+variable inbuf 100 allot
+
+: copy.file
+   " calc.app" READ  fopen   fin  !
+   " xxx.xxx"  WRITE fopen   fout !
+   begin
+       fin @ fgetc
+       dup
+       true = 0=
+       if ( not eof )
+         fout @ fputc drop
+         false
+       else
+         true
+       then
+   until
+   fin @ fclose
+   fout @ fclose
+   ;
+
+
+Opening the files is identical to the first example. The loop reads a
+character from the input file using "fgetc" and tests for end of file.
+Each character is written to the output file by "fputc".
+
+" Add example using fputline, etc " - block to text file
+converter would be nice...
+
+File manipulation in Until is implemented indirectly via C I/O functions. The
+primary difference is passing arguments on the stack to the primitive,
+which in turn calls the corresponding C function.
+
+__________________________________________________________________
+
+
+
+Operating System Words
+
+This section describes the words that interact with the underlying
+operating system that Until runs under.
+
+__________________________________________________________________
+
+argc
+( --- argc )
+"a-r-g-c". argc leaves the number of arguments from the command line on the
+parameter stack. This makes passing command line arguments to Until
+words easy. See argv for a complete example.
+
+__________________________________________________________________
+
+argv
+( --- argv )
+"a-r-g-v". argv leaves the pointer to the arguments on the command
+line on the stack. This makes passing command line arguments to
+Until words easy.
+
+      : test-argv
+           argv       20 dump cr cr
+           argv @     20 dump cr cr ( argv[0] )
+           argv 4 + @ 20 dump cr cr ( argv[1] )
+           ;
+
+
+__________________________________________________________________
+
+dir
+( --- )
+"dir". Executes a "dir" command to the OS. This works fine in DOS, CP/M, and
+VAX/VMS. In Unix and its' clones, you must create a shell script named dir.
+dir accepts no file specification. Do a directory via "system"
+to generate a selective directory.
+
+__________________________________________________________________
+
+edit
+( 'filename --- )
+This word shells to the OS to execute the editor specified in
+the global variable "editor". The default is EMACS, except for
+Coherent where the name is "me". Usage is:
+
+
+      " filename" edit
+
+
+Once the filename has been specified in the first edit, simply use
+"here" to edit the same file again.
+
+__________________________________________________________________
+
+errno
+( --- value )
+"errno". Return the value of C's "errno" global variable to the
+top of the stack. Refer to your C compiler's documentation for
+values and their meanings.
+
+__________________________________________________________________
+
+fload
+( --- )
+"f-load". Compile the sealed file specified as the next token
+in the input stream.
+
+      fload source.bin
+
+
+__________________________________________________________________
+
+free
+( addr --- )
+"free". Return memory allocated by "malloc" to the system.
+See "malloc" for an example.
+
+__________________________________________________________________
+
+get_env
+( 'env-string --- )
+"get-e-n-v". Retrieves the system environment variable whose
+name is contained in "'env-string". The original value is
+replaced with the value returned by the system.
+
+    80 string value
+    value " UNTIL-DIR" strcpy
+    value get_env
+    value dup count type cr
+
+
+__________________________________________________________________
+
+include
+( --- )
+"include". Compiles the file specified as the next token in the
+input stream.
+
+
+      include source.app
+
+
+Compiles the file, source.app, then returns to normal interpretation
+of commands from the console.
+
+__________________________________________________________________
+
+list
+( --- )
+"list". Type the contents of a file. The usage is:
+
+
+      list filename
+
+
+__________________________________________________________________
+
+load
+( --- )
+"load". Load is not implemented. See "fload" or "include".
+
+__________________________________________________________________
+
+malloc
+( n --- addr )
+"malloc". Allocate n bytes of system memory. The C malloc() function
+is called. Use "free" to return the memory to the system when done
+with it. Usage:
+
+
+      100 malloc
+      mem_ptr !
+      ( some words )
+      mem_ptr @
+      free
+
+
+__________________________________________________________________
+
+realloc
+( 'memory-block --- addr )
+"re-alloc". Call the C function "realloc()" to reallocate a
+block of memory. "memory-block" is the address of a previously
+malloc'd block of memory. The return, "addr", is either the
+address of the newly allocated memory block or 0 on error.
+
+__________________________________________________________________
+
+shell
+( --- )
+"shell". Spawn/fork/whatever a shell to the OS.
+
+
+      shell
+
+
+Log off to exit the shell and return to Until. This is "exit"
+in DOS, "Control-D" in **ix, and "logout" in VMS.
+
+__________________________________________________________________
+
+STDIN
+( --- fd-stdin )
+"standard-in". Leave the file descriptor on the stack for STDIN. Most
+systems open STDIN by default.
+
+__________________________________________________________________
+
+STDOUT
+( --- fd-stdout )
+"standard-out". Leave the file descriptor on the stack for STDOUT. Most
+systems open STDOUT by default.
+
+__________________________________________________________________
+
+system
+( --- )
+"system". Used in the form:
+
+
+      " command" system
+
+
+This command shells out to the operating system and executes the
+command, such as dir.
+
+
+
+__________________________________________________________________
+
+
+
+Strings
+
+Over the years, it seems that every Forth implementation has its own
+string word set. Until is no different. ANS Forth specifies a string
+word set, I believe. I haven't seen it and so cannot comment on its
+usefulness. The best string package I have ever used is the one
+included in VAX STOIC. It proved more than adequate on a very large
+database publishing application, which is mostly string manipulation.
+
+Until also implements the C string library.  C strings are null
+terminated rather than counted. Care must be taken to be sure that the
+two types are not mixed.
+
+Until includes a couple of words that give the programmer some
+flexibility in how Until treats strings. A word, " defines a string
+constant. It can be used both interactively and compiled into words. "
+will return either a null or counted string depending on the value in
+"null_strings".  C string functions always return a value. A second
+string flag, "string_return", controls whether the C string return
+values are placed on the stack or ignored by Until.
+
+The best type of string depends on how the string are used. Null
+terminated strings have a definite advantage when the start of the
+string is being manipulated most. Null terminated strings are most
+efficient when the end of the string is being manipulated most often.
+
+__________________________________________________________________
+
+
+STOIC Strings
+
+The STOIC string word set is implemented in Until via the source
+file "STRING.APP". They should eventually be rewritten in C
+for speed. However, they exist and are functional at the present
+time.
+
+The STOIC string words are:
+
+
+move_string 	Move one string to another.
+.move_string 	Move the contents of a string to another string.
+stab            Store a byte.
+strap           String append.
+.strap          String append
+.streq          Test for string equality.
+etc.
+
+
+The structure of strings in STOIC is a max length byte, followed by
+the current length, then the bytes. This is an extra field beyond
+Forth strings. The STOIC string primitives test to be sure that strings
+do not overflow. This safety feature saved me many times.
+The Until string implementation does not do run-time length checking because
+of the speed penalty involved. The speed penalty would be
+especially noticeable in Until's high level implementation of these
+words.
+
+Note that there are two versions of most of the string words. For example,
+"move_string" and ".move_string". The normal version moves a
+counted string to a counted string. The '.' version requires an explicit
+length argument.
+
+__________________________________________________________________
+
+move_string
+('source 'destination  --- )
+"move string". Move the contents of "source" to "destination".
+Both addresses are counted strings. The destination string must be
+large enough to hold the source string.
+
+__________________________________________________________________
+
+.move_string
+(addr len 'destination  --- )
+"dot move string". This is a variation of move_string that uses an address
+and length to specify the source string. "destination" specifies the
+address of the counted string that receives the source. No provision is
+made for overlapping strings.
+
+__________________________________________________________________
+
+stab(char 'destination --- )
+"stab". Store a byte, or stab, appends a byte to the end of the counted
+string whose address is specified by "destination". The count
+byte is automatically incremented.
+
+__________________________________________________________________
+
+strap('source 'destination  --- )
+"strap". The string append word appends the contents of the source
+string, "'source", to the destination string, "'destination".
+Both source and destination string must be a counted string.
+
+__________________________________________________________________
+
+.strap
+.strap High level (addr len 'destination  --- )
+"dot strap". append the string at addr to destination for len bytes.
+This word is a variation of "strap".
+
+__________________________________________________________________
+
+STOIC String Example
+
+Assume you are building a file name, including path. This example
+uses many of the STOIC string manipulation words to take the pieces
+and build up a counted string with the full file name.
+
+
+
+\
+\ Load string words
+include string.unt        \ Assumes current directory
+
+\ Variables
+80 string full.name       \ final destination string
+40 string device
+40 string directory
+40 string name
+40 string extension
+
+\ Load up initial values
+{ c:} here 2 device .move_string
+{ trash} here name null->counted
+{ dat} here 3 extension .strap      \ Assumes length is 0
+{ \junk} here directory null->counted
+
+\ Now put the pieces together
+device full.name move_string
+directory full.name strap
+{ \} here c@ full.name .stab
+name fill.name strap
+ascii . full.name stab
+extension count full.name .strap
+
+\ Show the result...
+full.name msg
+c:\junk\trash.dat
+
+
+Remember that "{ ... }" leaves the string at "here" in
+null terminated form. That is the reason ".move_string" must
+be used instead of "move_string".
+
+The code for string manipulation seems a little strange at first,
+but I have found it to be the best string manipulation
+package for Forth after using it for a short while. When dealing
+with counted strings, I frequently use the STOIC string words.
+
+
+__________________________________________________________________
+
+C Strings
+
+Until also supports the C string functions. There is a corresponding
+primitive set up for the most commonly used C string functions. The word
+arguments correspond to the C function arguments. All C strings are
+null terminated. Until provides words to convert between null and
+counted strings.
+
+The C string words are:
+
+
+atol    	Ascii to Long.
+strcat  	Concatenate the source string to the destination string.
+strncat 	Concatenate n bytes of the source string to the destination string.
+strcmp  	Compare two strings.
+strncmp 	Compare two strings for "n" bytes.
+strcpy  	Copy one string to another.
+strncpy 	Copy "n" bytes of one string to another.
+toupper 	Convert a character to upper case.
+tolower 	Convert a character to lower case.
+
+
+
+The C string functions generally return the address of the destination
+string on success. C programmer's ignore the return 99% of the
+time. Forth does not allow ignoring a return value. There
+are two solutions, one be compatible with the function calls
+and return the address or don't return the address at all. I
+chose the long form for completeness, however painful. The word
+"string_returns" has been added to set a flag that toggles
+string word return values on and off.
+
+The following is the word glossary for the C string words.
+
+__________________________________________________________________
+
+"
+( --- 'constant-string )
+"double-quote". Generate a constant string bound by a ". Character
+quoting using the '\' character ala C is allowed. For example:
+
+
+    " This is a string\n"
+
+
+defines a constant string with a <newline> as its last character.
+
+__________________________________________________________________
+
+atol
+( 'string --- n)
+"a-to-l". The Ascii to long function converts a string to a
+long integer. Characters up to the first non-digit are converted
+and left on the stack.
+
+        " 12345" atol
+
+leaves 12345 on the stack. Be aware that the C atol() function does
+not return an error when a non-digit is encountered:
+
+        " 123+" atol
+
+leaves 123 on the stack. This can cause some difficult to track down
+program bugs, so be careful!
+
+__________________________________________________________________
+
+null_strings
+( tf --- )
+"null strings". Until treats strings as counted by default for
+""". This word allows the programmer to toggle the operation of
+""" to switch to null terminated representation.
+
+
+      true  null_strings    \\ Null terminated strings
+      false null_strings    \\ Counted strings
+
+
+__________________________________________________________________
+
+strcat
+( 'dest 'source --- 'dest ) - When string_returns is true.
+( 'dest 'source --- ) - When string_returns is false.
+"s-t-r cat". Concatenate the source string to the destination string.
+
+__________________________________________________________________
+
+strcmp
+( 'string1 'string2 --- 1 )
+"s-t-r c-m-p". Compare two strings. Zero means the strings match. If
+the return value is less than zero, string1 is less than string2. If
+the return value is positive, string1 is greater than string2.
+
+__________________________________________________________________
+
+strcpy
+( 'dest 'source --- 'dest ) - When string_returns is true.
+( 'dest 'source --- ) - When string_returns is false.
+"s-t-r c-p-y". Copy the string whose address is "source"
+into the string at "dest". No check is made for string overflow.
+
+__________________________________________________________________
+
+string_returns
+( tf --- )
+"string return". C string functions have the nasty habit of
+returning values that most C programmers ignore. This causes code
+that is a mess in Until to explicitly "drop" unused function values.
+This word controls whether the C string words return values to
+the parameter stack.
+
+
+      true  string_return   \\ String words return values
+      false string_return   \\ String words do not return values
+
+
+This approach gives the programmer a choice. The words affected
+by "string_returns" are:
+
+- strcat
+- strcpy
+- strncat
+- strncpy
+
+
+The default is TRUE.
+
+__________________________________________________________________
+
+strncat
+( 'dest 'source len --- 'dest ) - When string_return is true.
+( 'dest 'source len --- ) - When string_return is false.
+"s-t-r-n-c-a-t". Concatenate n bytes of the source string to
+the destination string.
+
+__________________________________________________________________
+
+strncmp
+( 'string1 'string2 len --- )
+"s-t-r-n-c-m-p". Compare two strings for "n" bytes.
+
+__________________________________________________________________
+
+strncpy
+( 'dest 'source len --- 'dest ) - When string_return is true.
+( 'dest 'source len --- ) - When string_return is false.
+"s-t-r-n-c-p-y". Copy "n" bytes of one string to another.
+
+__________________________________________________________________
+
+strret
+( --- returnvalue )
+"s-t-r-r-e-t". Get the value returned by the last C string
+word call.
+
+__________________________________________________________________
+
+strupr
+( 'string --- )
+"s-t-r-u-p-r". Convert the null terminated string to all upper case
+characters. The string is converted in place.
+
+__________________________________________________________________
+
+tolower
+( CH --- ch )
+"to-lower". Convert a character to lower case.
+
+__________________________________________________________________
+
+toupper
+( ch --- CH )
+"toupper". Convert a character to upper case.
+
+__________________________________________________________________
+
+C String Example
+
+This section contains examples of using the C string functions in
+Until.
+
+
+
+false string_returns
+true null_strings
+
+100 string dest
+100 string source
+
+: .dest
+   ." dest  : " dest dup strlen type cr
+   ;
+: .source
+   ." source: " source dup strlen type cr
+   ;
+: init.strings
+   dest   " this is the dest string..." strcpy
+   source " The source string" strcpy
+   .dest   .source cr
+   ;
+: s.test1
+   ." Calling strlen..." cr
+   dest strlen .s cr
+   .dest cr
+   ;
+: s.test2
+   ." Calling strcat..." cr
+   dest source strcat .s cr
+   .dest   .source cr
+   ;
+: s.test3
+   ." Calling strcpy..." cr
+   dest source strcpy .s cr
+   .dest   .source cr
+   ;
+: s.test4
+   ." Calling strncpy..." cr
+   dest source 5 strncpy .s cr
+   .dest   .source cr
+   ;
+: s.test5
+   ." Calling strncat..." cr
+   dest source 5 strncat .s cr
+   .dest   .source cr
+   ;
+: s.test6
+   ." Calling strcmp..." cr
+   dest source strcmp .s drop
+   .dest   .source cr
+
+   ." Calling strncmp..." cr
+   dest source 5 strncmp .s drop
+   .dest   .source cr
+   ;
+
+
+Execute "init.strings", then each individual test to see the
+results.
+
+__________________________________________________________________
+
+
+
+String Search/Replace
+
+I continued to use AWK for writing simple file filters after I
+wrote Until. About 80% of the AWK scripts were simply searches
+and replaces. AWK includes a sub() function to do a single search
+and replace on a line and a gsub() function for global search
+and replace in a line. The Until string search and replace module
+was inspired by AWK. In addition to "sub" and "gsub",
+there are functions to search for a substring within a string
+and search for a substring and insert a string.
+
+The algorithms are simple and brute force, but effective. There
+is definitely room for speed improvements. As a matter of fact,
+one beta tester already improved code that will probably be
+included in the next release.
+
+Also expect some changes in the words themselves in the next release.
+For example, there is "search&insert" but no global version.
+
+__________________________________________________________________
+
+clear_temp
+(  --- )
+"clear-temp". The search and replace C functions use a dynamically
+allocated temporary work string. Calling clear_temp will free()
+the memory.
+
+__________________________________________________________________
+
+gsub
+( 'string 'search 'replace --- #matches )
+"g-sub". The global search and replace word searches "string"
+for "search" and replaces it with "replace" when a
+match occurs. This version performs multiple replacements in
+the string. The number of replacements is returned.
+
+   inbuf 1+ " is" " is not" gsub
+
+Searches <INBUF> for occurrences of "is" and replaces each with
+"is not".
+
+__________________________________________________________________
+
+insert
+( 'string 'new-string --- 'string )
+"insert". Insert "new-string" at the beginning of "string".
+The address of the original string is returned.
+
+__________________________________________________________________
+
+replace
+( 'string 'new_str 'sub_str --- 'string )
+"replace". Replace the substring, "sub_str",  starting at
+"string" with the new string, "new_str". The original
+address is returned. No check is made to see that the new
+string fits.
+
+__________________________________________________________________
+
+search
+( 'string 'search --- f|'match )
+"search". Search "string" for the substring "search". The
+address of the match is returned when "search" is found or
+0 for no match. For example:
+
+	inbuf " xxx" search
+
+returns the match address or 0 when no match occurs.
+
+__________________________________________________________________
+
+search&insert
+( 'string 'search 'insert --- f|'match )
+"search and insert". Search "string" for the substring, "search",
+and insert "insert" after the match point. The address of the end of
+the match is returned on match or 0 for no match. For example:
+
+   inbuf " is" "  not" search&insert
+
+will change an occurrence of "is" into "is not".
+
+__________________________________________________________________
+
+sub
+( 'string 'search 'replace --- tf )
+"sub". The global search and replace word searches "string"
+for "search" and replaces it with "replace" when a
+match occurs. This version performs only a single replacement
+per call.
+
+__________________________________________________________________
+
+Search and Replace Example
+
+The primary reason I added the search and replace words is writing
+file filters. A skeleton file filter application is included
+in FILTER.APP in the distribution so that writing a file filter
+is a matter of writing a word to process each line in the file
+and calling "filter".
+
+Assume that you must change all of the occurrences of "is" to
+"is not" in a file. Using "filter" and "gsub", the
+following code is all you need:
+
+
+fload filter.app
+
+: process.line		( --- )
+   inbuf 1+ "  is " "  is not " gsub	\ blank is blank
+   if ( the search was successful )
+      inbuf 1+ dup strlen type          \ Type lines that match
+   endif
+   inbuf 1+ fout @ fputs drop
+   ;
+
+: doit " 00read.me" " xxx.out" ['] process.line filter  ;
+
+
+The example code is in file FILTEREX.APP. This filter program:
+
+- Substitutes " is not " for each occurrence of " is " in
+the input file. The blank before and after is makes sure
+there is no match when "is" occurs in the middle of a word, like
+disk.
+- Each line with a match is typed to the screen.
+- Each line is written to the output file.
+
+
+"filter" requires three parameters, the input file name, the output
+file name, and the address of the word to execute. In the example,
+00read.me in the input file, xxx.out the output
+file, and process.line is the word to execute. "filter"
+automatically handles opening, reading, and closing the files.
+
+__________________________________________________________________
+
+
+
+Help
+
+Until includes a built-in help facility. Simply type:
+
+
+      help any_word
+
+
+to display the help entry for "any_word". The help text is contained
+in the file HELP.APP. This file is a simple Ascii file.
+Each entry begins in column 1. Lines with
+leading spaces (tab characters too)
+are considered part of the entry. The first
+blank line is considered end of file. Sample help entries are shown
+below:
+
+
+@  ( addr --- value)
+     Fetch the contents of the integer at addr.
+!  ( n addr --- )
+     Store n at addr.
+
+
+These help entries set up entries for @ and !.
+
+An alternative approach is compiling the help information into
+the executable image. This approach was not taken with Until
+for the following reasons:
+
+- The executable file size would be significantly larger.
+- The messages are fixed at compile time.
+- The help file approach allows the Until help facility to be
+  modified for each application.
+
+
+The help system is designed to be easy to maintain entries. The data is
+contained in an Ascii file. It can be edited to match any application
+that contains Until. See "Write Your Own Programming Language Using
+C++;" it includes an entire chapter on HELP.
+
+__________________________________________________________________
+
+
+Vectored Words
+
+Several I/O words are vectored in Until by default, the C primitives
+READ_WA() and FREAD_WA(). The vectoring handles the switch from reading
+the keyboard to reading a file and back.
+
+The following words may be vectored in Until:
+
+
+- .
+- ."
+- ;
+- cr
+- emit
+- key
+- number
+- space
+- spaces
+- ?terminal
+- type
+
+
+
+The default Until configuration does not vector any of these words.
+Define the symbol "VECTORED_IO" and recompile Until to enable the
+vectored I/O words.
+
+There is a slight performance penalty for using vectored I/O.  The
+extra level of call indirection causes an extra C call each time any
+vectored word is called. This is the reason for defaulting to
+non-vectored I/O.
+
+The I/O vectoring, as currently implemented, is at the C level. You
+cannot vector high level Forth words. The present scheme provides
+the hooks. You provide the C functions via primitive words for changing
+the contents of the vectors and the C functions to call via the
+vectors. The following steps describe the steps to add your own
+vector for "spaces":
+
+
+- Write the new C function to replace the default spaces(). We'll
+call it new_spaces() for this example.
+- Write a primitive, set_new_spaces() to change insert the
+C function address of new_spaces into the vector for "spaces".
+- Bind the address of set_new_spaces() to the Forth word
+NEW-SPACES by adding an entry in USER.C.
+- Write a primitive, restore_spaces() to restore the
+original vector contents.
+- Bind the address of restore_spaces() to the Forth word
+RESTORE-SPACES by adding an entry in USER.C.
+- Recompile Until with VECTORED_IO defined in COMPILER.H.
+
+
+This scheme provides the user with a way to both set and
+restore the vector for spaces. Adding new vectors for any of
+the words identified in the word list above can be done using
+the same steps listed here for spaces().
+
+Vectoring via high level words is not supported in Until in
+this release. The hooks are there now. Expect vectored execution
+capabilities to be increased in future releases.
+
+
+
+Add discussion of low level C I/O vectoring.
+
+__________________________________________________________________
+
+
+Floating Point Words
+
+The present floating point package is a minimal implementation. It
+provides a way to input floating point numbers, manipulate the floating
+point stack, and output floating point numbers. Any of the
+C floating point library functions can be easily built upon with the
+basic capabilities included.
+
+The floating point package uses a separate floating point stack. Floating
+point numbers all reside on the floating point stack. Addresses and
+true/false flags all reside on the parameter stack.
+
+__________________________________________________________________
+
+f!
+( fn addr --- )
+"f-store". Store the floating point value, "fn", at address
+specified by "addr".
+
+
+      f# 3.1417 pi f!
+
+
+moves 3.1417 into the floating point variable pi.
+
+__________________________________________________________________
+
+f#
+( --- f# )
+"f-number". Interpret the next number in the input in the input
+stream as a floating point number.
+
+
+     f# 123.45  float-foo f!
+
+
+__________________________________________________________________
+
+f*
+( f1 f2 --- f-product )
+"f-star". Multiply two floating point numbers leaving the result on
+the floating point stack.
+
+
+     f# 2.0  f# 2.0 f* f.
+     4.00
+
+multiplies 2.0 by 2.0 and prints the result on the screen.
+
+__________________________________________________________________
+
+f+
+( f1 f2 --- f-sum )
+"f-plus". Add f1 to f2. The sum is placed on the top
+of the floating point stack.
+
+
+      f# 1.0 f# 2.0 +
+
+
+The result, 3.0, is left on the top of the floating point stack.
+
+__________________________________________________________________
+
+f-
+( f1 f2 --- f3 )
+"f-minus". Subtract f2 from f1 and place the result
+on the top of the floating point stack. (f1-f2=f3).
+
+
+      f# 2 f# 1 f-
+
+
+The result, 1.0, is left on the stack.
+
+__________________________________________________________________
+
+f.
+( fn --- )
+"f-dot". Display the number at the top of the floating point
+stack to the screen. This is a stack destructive operation.
+
+__________________________________________________________________
+
+f.s
+( ? --- ? )
+"f-dot-s". Non-destructive floating point stack display to the screen.
+
+__________________________________________________________________
+
+f/
+( f1 f2 --- fquotent )
+"f-divide". Divide f1 by f2. (f1/f2).
+
+
+      4 2 /
+
+
+Leaves 2.0 on the top of the floating point stack. There
+is no remainder.
+
+
+      f# 9 f# 2 f/
+
+
+computes to 4.50.
+
+__________________________________________________________________
+
+f<
+( f1 f2 --- tf )
+"f-less-than". Compare the two numbers on the top of the stack
+and return TRUE or FALSE.
+
+
+      f# 5 f# 6 f<          ( RETURNS true  )
+      f# 5 f# 5 f<          ( RETURNS false )
+      f# 6 f# 5 f<          ( RETURNS false )
+
+
+__________________________________________________________________
+
+f=
+( f1 f2 --- tf )
+"f-equal". Compare the top two values on the stack for equality.
+
+
+      f# 5 f# 6 f=         ( returns false )
+      f# 5 f# 5 f=         ( returns true  )
+      f# 6 f# 5 f=         ( returns false )
+
+
+__________________________________________________________________
+
+f>
+( f1 f2 --- tf )
+"f-greater-than". Compare the top two
+floating point stack entries. (f1>f2).
+
+
+      f# 5 f# 6 f>          ( returns false )
+      f# 5 f# 5 f>          ( returns false )
+      f# 6 f# 5 f>          ( returns true  )
+
+
+__________________________________________________________________
+
+>float
+( n --- f1 )
+"to-float". Convert an integer value on the parameter stack to
+a floating point number on the floating point stack.
+
+
+     1 >float
+
+
+leaves 1.0 on the floating point stack.
+
+__________________________________________________________________
+
+f@
+( addr --- fn )
+"f-fetch". Fetch the floating point value from address and
+place on the top of the floating point stack.
+
+
+      ftrash f@
+
+
+retrieves the value stored at ftrash and places it on the top
+of the floating point stack.
+
+__________________________________________________________________
+
+fconstant
+( --- fn )
+"f-constant". Create a floating point constant. The compile time
+stack comment is ( fn --- ). Typical usage is:
+
+
+      f# 3.1416 fconstant pi
+
+
+When "pi" is referenced, the floating point value 3.1416
+is pushed onto the floating point stack:
+
+
+      pi    ( --- 3.1416 )
+
+
+__________________________________________________________________
+
+fdrop
+( f1 --- )
+"f-drop". Remove the top number from the floating point stack.
+
+__________________________________________________________________
+
+fdup
+( f1 --- f1 f1 )
+"f-dup". Duplicate the number on the top of the floating point stack.
+
+      f# 1.0 f# 1.0 fdup
+
+
+Results in two 1.0s on the floating point stack.
+
+__________________________________________________________________
+
+float>
+( f1 --- n )
+"from-float". Convert a floating point number to integer.
+
+
+     f# 123.456 float>
+
+
+leaves 123 on the parameter stack.
+
+__________________________________________________________________
+
+fover
+( f1 f2 --- f1 f2 f1 )
+"f-over". Copy "f1" to the top of the floating point stack.
+
+
+      f# 1 f# 2 fover
+
+
+results in ( 1.0 2.0 1.0 ).
+
+__________________________________________________________________
+
+frot
+( f1 f2 f3 --- f2 f3 f1 )
+"f-r-o-t". Rotate the third value on the floating point stack to the
+top. The other values are pushed down one cell.
+
+
+      f# 1 f# 2.0 f# 3.0 frot
+
+
+results in (2.0 3.0 1.0).
+
+__________________________________________________________________
+
+fswap
+( f1 f2 --- f2 f1 )
+"f-swap". Swap the top two entries on the top of the
+floating point stack.
+
+
+      f# 1.0 f# 2.0 fswap
+
+
+results in the top stack entry being 2.0 and the second entry
+being 1.0.
+
+__________________________________________________________________
+
+fvariable
+( --- 'fvariable )
+"f-variable". At compile time, creates a floating point variable:
+
+
+      fvariable ftrash
+
+
+The compile time stack comment for "variable" is ( --- ).
+At run time, push the address of the
+floating point variable onto the stack:
+
+
+      ftrash    ( --- addr.of.trash )
+
+
+__________________________________________________________________
+
+Floating Point Examples
+
+TBS
+
+__________________________________________________________________
+
+
+                        General Glossary
+
+The following section is the general word glossary for Until. All of
+the words are defined here.
+
+
+__________________________________________________________________
+
+!
+( n addr --- )
+"store". Store the value, "n", at address specified by "addr".
+
+
+      5 trash !
+
+
+moves 5 into the variable trash.
+
+__________________________________________________________________
+
+"
+( --- 'constant-string )
+"double-quote". Generate a constant string bound by a ". Character
+quoting using the '&backslash;' character ala C is allowed. For example:
+
+
+    " This is a string&backslash;n"
+
+
+defines a constant string with a <newline> as its last character.
+
+__________________________________________________________________
+
+#
+(ud1 --- ud2)
+"sharp". Convert the next digit in "ud1" to ASCII and add
+it to the numeric string being built. Used with "<#".
+
+__________________________________________________________________
+
+#>
+(d --- addr len)
+"sharp-greater-than". Ends a number formatting sequence. See
+<#.
+
+
+__________________________________________________________________
+
+#s
+(ud --- 00)
+"numbers". Convert the unsigned double number to numeric
+digits.
+
+__________________________________________________________________
+
+#tib
+( --- 'tib )
+"number-tib". This word returns the address of the Terminal Input
+Buffer (tib).
+
+__________________________________________________________________
+
+'
+( --- 'word )
+"tick". Tick looks up the next blank delimited token in the input
+stream in the Dictionary and leaves its address on the stack.
+
+
+       ' aword
+
+
+leaves the word address of "aword" on the data stack.  The
+operation of tick is slightly different from Forth-83 because it
+actually leaves the address of the word entry (WA) rather than the CFA.
+The effect is the same because Until's "<A
+HREF="&EXECUTE;">execute" works that way.  It is easy to go from
+the word address to the fields, but was not easy to go from one header
+field to another.
+
+__________________________________________________________________
+
+(
+( --- )
+"left paren". Text between the parenthesis is treated as a comment.
+Left parens starts a comment. A parens comment may span multiple lines.
+
+
+       ( This is a comment )
+
+
+Use &backslash; to comment to the end of the current line.
+
+__________________________________________________________________
+
+*
+(n1 n2 --- n1*n2 )
+"star". Multiply n1 times n2.
+
+
+      2 2 *
+
+
+The result, 4, is placed on the top of the stack.
+
+__________________________________________________________________
+
+*/
+(n1 n2 n3 --- quot )
+"star-slash". Multiply n1 times n2, then divide by n3. (n1*n2/n3). The
+quotient is left on the stack.
+
+
+      3 3 2 */
+
+
+leaves 4 on the stack.
+
+__________________________________________________________________
+
+*/mod
+( n1 n2 n3 --- quot rem )
+"star-slash-mod". Multiply n1 * n2, then divide by n3, leaving
+the quotient and remainder on the stack. (n1*n2/n3).
+
+
+      4 4 2 */mod
+
+
+results in 8 0 on the stack. (4*4/2).
+
+__________________________________________________________________
+
++
+( n1 n2 --- n1+n2 )
+"plus". Add n1 to n2. The sum is placed on the top
+of the stack.
+
+
+      1 2 +
+
+
+The result, 3, is left on the top of the stack.
+
+__________________________________________________________________
+
++!
+( n addr --- )
+"plus-store". Add "n" to the value at address "addr".
+Assume trash contains 27.
+
+
+      10 trash +!
+
+
+trash contains now contains 37.
+
+__________________________________________________________________
+
++loop
+( n --- )
+"plus loop". The end of a do loop. The loop index is incremented by 'n'
+each time through the loop.
+
+
+      : xxx 10 0 do i . 2 +loop ;
+
+
+This do loop will execute 5 times. +loop can be used only inside a word
+definition. See "do".
+
+__________________________________________________________________
+
+,
+( n --- )
+"comma". Not implemented. This word compiles a 32-bit number into
+the dictionary.
+
+__________________________________________________________________
+
+-
+( n1 n2 --- n3 )
+"minus". Subtract n2 from n1 and place the result
+on the top of the stack. (n1-n2=n3).
+
+
+      2 1 -
+
+
+The result, 1, is left on the stack.
+
+__________________________________________________________________
+
+-find
+( 'string --- addr flag )
+"minus-find". Search the dictionary for the word name in "string". The
+return values are the address of the word and a flag. The flag values
+are:
+
+
+ 0=not found
+ 1=normal
+-1=immediate
+
+
+The address is valid only when flag is non-zero. A typical usage of
+-find is:
+
+
+      { aword} here -find
+
+
+The return value could be tested before further processing.
+
+__________________________________________________________________
+
+-rot
+( n1 n2 n3 --- n3 n1 n2)
+"minus-rot". Move the value on the top of the parameter stack to the
+third item.
+
+
+      1 2 3  -rot
+
+
+becomes 3 1 2.
+
+__________________________________________________________________
+
+-trailing
+( addr len --- addr' len')
+"minus-trailing". Remove trailing blanks from the counted string at
+"addr". The length, "len", is adjusted accordingly.  If trash contains
+``This is a test   ''. The stack would have 68642 17.
+
+
+      trash count -trailing
+
+
+results in 68642 14. (Trust me, there are three trailing
+blanks!)
+
+__________________________________________________________________
+
+.
+( n --- )
+"dot". Display the number at the top of the parameter
+stack to the screen. This is a stack destructive operation.
+Note: Only base 8, 10, and 16 are supported by this operation.
+
+__________________________________________________________________
+
+."
+( --- )
+"dot quote". Type a string to the screen. Used in the form:
+
+
+	." This goes to the screen."
+
+
+This word can be used only inside of a word definition. Use ".("
+for interactive or stream messages.
+
+__________________________________________________________________
+
+.(
+( --- )
+"dot-parens". Type a constant string to the terminal screen. The
+string is terminated with a right parens. This word is used during
+interpretive mode only.
+
+
+      .( This is displayed.)
+
+
+The typical usage is writing messages to the screen when
+compiling from a file.
+
+__________________________________________________________________
+
+.bin
+( n --- )
+"dot-bin". Type the 32-bit binary representation of number on the
+top of the stack.
+
+__________________________________________________________________
+
+.move_string
+High level (addr len 'destination  --- )
+"dot move string". This is a variation of move_string that uses an address
+and length to specify the source string. "destination" specifies the
+address of the counted string that receives the source. No provision is
+made for overlapping strings.
+
+__________________________________________________________________
+
+.quote
+( --- )
+This is an internal word that should not be used. ".quote" is
+the run-time code for "."".
+
+__________________________________________________________________
+
+.s
+dot_s ( --- )
+"dot s". Non-destructive Data Stack display to the screen. Until
+also displays the stack contents each time through the main loop in the
+outer interpreter.
+
+__________________________________________________________________
+
+.strap
+High level (addr len 'destination  --- )
+"dot strap". end the string at addr to destination for len bytes.
+This word is a variation of "strap".
+
+__________________________________________________________________
+
+/
+( n1 n2 --- quot )
+"slash". Divide n1 by n2. (n1/n2).
+
+
+      4 2 /
+
+
+Leaves 2 on the top of the stack. There is no remainder.
+
+
+      9 2 /
+
+
+computes to 4. Until does not deal with floored division vs.
+normal division. It uses the standard C division operator.
+And that's that!
+
+__________________________________________________________________
+
+/mod
+( n1 n2 --- quotient remainder )
+"slash-mod". Divide n1 by n2 leaving the quotient and remainder on
+the parameter stack. (n1/n2).
+
+
+      10 3 /mod
+
+
+results in (3 1) being left on the stack.
+
+__________________________________________________________________
+
+0
+( --- 0 )
+"zero". Push a constant of 0 onto the parameter stack. Several small
+integers are defined as words instead of being converted to numbers
+because the compile time is quicker.
+
+__________________________________________________________________
+
+0<
+( n --- tf )
+"zero-less-than". Compare the number at the top of the parameter stack
+to zero to determine if it is less than zero. TRUE means n is less than
+zero. FALSE indicates n is greater than or equal zero.
+
+
+	-1 0<   ( RETURNS true )
+	00 0<   ( RETURNS false )
+	99 0<   ( RETURNS false )
+
+
+This primitive executes faster than executing 0 < AS two separate
+words.
+
+__________________________________________________________________
+
+0=
+( n --- tf )
+"zero-equal". Test the number on the top of the parameter stack
+for equal to zero. Return TRUE when n is zero, else return false.
+
+
+	99 0=   ( returns FALSE )
+	00 0=    ( returns TRUE )
+
+
+__________________________________________________________________
+
+0>
+( n --- tf )
+"zero-greater-than". Compares "n" to zero and replaces n with
+TRUE if it greater than zero or FALSE when less than or equal zero.
+
+
+	99 0>   ( returns TRUE )
+	00 0>   ( returns FALSE )
+	-1 0>   ( returns FALSE )
+
+
+__________________________________________________________________
+
+0bran
+Internal Use Only
+This word is used internally by the compiler. It branches to the address
+in the next cell in the dictionary when the value on the top of
+the parameter stack is zero. "0bran" is typically used in conditional
+and looping constructs.
+
+__________________________________________________________________
+
+1
+( --- 1 )
+"one". Push a constant 1 onto the parameter stack. Several small
+integers (0, 1, 2, and 3) are defined as words instead of being
+converted to numbers because the compile time is quicker.
+
+__________________________________________________________________
+
+1+
+( n --- n+1 )
+"one-plus". Add one to the number on the top of the parameter stack.
+
+__________________________________________________________________
+
+1+!
+( addr --- )
+"one-plus-store". Add one to the contents of the cell located at
+addr.
+
+__________________________________________________________________
+
+1-
+( n --- n-1)
+"one-minus". Subtract one from the number on the top of the
+parameter stack.
+
+__________________________________________________________________
+
+2
+( --- 2 )
+"two". Push a constant two onto the parameter stack. Several small
+integers (0, 1, 2, and 3) are defined as words instead of being
+converted to numbers because the compile time is quicker.
+
+__________________________________________________________________
+
+2+
+( n --- n+2 )
+"two plus". Add two to the number on the top of the parameter stack.
+
+__________________________________________________________________
+
+2-
+( n --- n-2 )
+"two-minus". Subtract two from the number on the top of
+the stack.
+
+__________________________________________________________________
+
+2/
+( n --- n/2)
+"two-divide". Divide the number on the top of the stack.
+
+__________________________________________________________________
+
+2dup
+( n1 n2 --- n1 n2 n1 n2 )
+"two dup". Duplicate the top two numbers on the stack. This word
+is also used for duplicating a double length number.
+
+
+      1 2 2dup
+
+
+results in a stack of 1 2 1 2.
+
+__________________________________________________________________
+
+3
+( --- 3 )
+"three". Push a constant value three onto the parameter stack. Several
+small integers (0, 1, 2, and 3) are defined as words instead of being
+converted to numbers because the compile time is quicker.
+
+__________________________________________________________________
+
+:
+( --- )
+"colon". Start a new word definition. The word name is the next word in the
+input stream:
+
+
+      : new macro  ;
+
+
+See ';'.
+
+__________________________________________________________________
+
+;
+( --- )
+"semi". Finishes a word definition and exits
+compile mode. Must be paired with :. See ':'.
+
+__________________________________________________________________
+
+<
+( n1 n2 --- tf )
+"less than". Compare the two numbers on the top of the stack
+and return TRUE or FALSE.
+
+
+      5 6 <                 ( RETURNS true  )
+      5 5 <                 ( RETURNS false )
+      6 5 <                 ( RETURNS false )
+
+
+__________________________________________________________________
+
+<#
+( d --- d )
+"less than sharp". Initialize a numeric output string. Digits
+are converted right to left within the output picture.
+
+
+      1234 0 <# # # #> type
+
+
+outputs 34 to the user terminal.
+
+__________________________________________________________________
+
+<builds
+( --- )
+Not implemented. I include it here because I started out with Fig
+Forth and <builds ... does> just feels right.
+
+__________________________________________________________________
+
+<outer>
+Internal Use Only
+This is the word that is called during startup to begin execution
+of the outer interpreter. It is bound to a C function.
+
+__________________________________________________________________
+
+=
+( n1 n2 --- tf )
+"equals". Compare the top two values on the stack for equality.
+
+
+      5 6 =                ( returns false )
+      5 5 =                ( returns true  )
+      6 5 =                ( returns false )
+
+
+__________________________________________________________________
+
+>
+( n1 n2 --- tf )
+"greater than". Compare the top two stack entries. (n1>n2).
+
+
+      5 6 >                 ( returns false )
+      5 5 >                 ( returns false )
+      6 5 >                 ( returns true  )
+
+
+__________________________________________________________________
+
+>counted
+( 'null --- addr len)
+"to-counted". Convert the null terminated string at "'null" to
+counted form with the address and length left on the stack.
+This word is useful in converting
+a string returned from a C function to the form normally expected by
+Forth.
+
+__________________________________________________________________
+
+>here
+High level ( 'string --- )
+"to-here". Copy the string whose address is on the top of the stack
+to "here". Several system/file words expect a string at
+"here". For example:
+
+
+	" xxx.xxx" >here   here 20 dump
+
+
+__________________________________________________________________
+
+>in
+( --- 'IN)
+"to-in". Return the address of the system variable that contains
+the offset to the current byte in TIB.
+
+__________________________________________________________________
+
+>null
+( 'null 'counted --- )
+"to-null". Convert the null terminated string whose address is "'null"
+to a counted string at "'counted". Forth normally uses
+counted strings and C uses null terminated strings. This word is
+typically used to get a string in the correct form for passing
+to a C function call.
+
+__________________________________________________________________
+
+>r
+( n --- )
+"to-r". Move the top number, "n", on the parameter stack to the
+return stack. This word cannot be used in Until to alter the processing
+path taken by the inner interpreter. It is possible to implement GOTO
+in some Forths using this technique.
+
+__________________________________________________________________
+
+?
+( addr --- )
+"query". Type the contents of the address that is on the
+top of the stack.
+
+
+      trash ?
+
+
+types the value stored in the variable trash. This is
+logically equivalent to "@ .".
+
+__________________________________________________________________
+
+?dup
+( n --- n | n n )
+"query-dup". Duplicate the top number on the stack if it not equal
+to zero. "?dup" is useful in situations were a number will be used
+when it contains a value. It prevents having to explicitly have an "else"
+statement to clean up the stack. For example, the following word
+types the value of the number on the top of the stack using "dup":
+
+
+	: aword  dup if ." The number is: " . cr
+	             else drop
+	             then ;
+
+
+Now, consider the same word using "?dup":
+
+
+	: aword  ?dup if ." The number is: " . cr then ;
+
+
+The second form of "aword" is not only cleaner to read, it
+executes faster.
+
+__________________________________________________________________
+
+?terminal
+( --- tf)
+"query-terminal". Return TRUE when a character is waiting in the input
+buffer. The action of this word is OS dependent. It always returns TRUE
+in VMS and Coherent (including other Unix variants).  Borland C++
+includes a function, "keyin()", that is equivalent to "?terminal". Most
+other C compilers do not. In addition, "getc()" normally does not
+return a character until <CR> is pressed. This causes slight
+differences in the operation of not only "?terminal", but "key" as
+well.  The typical usage is polling the keyboard for a key press:
+
+
+      : wait-for-key   begin ?terminal until key drop ;
+
+
+__________________________________________________________________
+
+@
+( addr --- n )
+"fetch". Fetch the value from address and place on the top
+of the stack.
+
+
+      trash @
+
+
+retrieves the value stored at trash and places it on the top
+of the stack.
+
+__________________________________________________________________
+
+
+                                   A
+
+__________________________________________________________________
+
+abort
+( --- )
+"abort". Abort the execution of the current word, do a warm start,
+then return to the outer interpreter outer-most loop. Until differs
+from most Forth implementations in that execution is not stopped
+immediately. The interpreter loop continues until the bottom at which
+time a warm start is done.
+
+__________________________________________________________________
+
+abort"
+( ? --- )
+"abort-quote". Abort the outer interpreter after typing the message
+ended by a ". This word does not terminate the outer interpreter
+immediately, but waits until the end of the current loop to perform
+the warm start.
+
+__________________________________________________________________
+
+abort_quote
+Internal Use Only
+
+__________________________________________________________________
+
+abs
+( n --- |n| )
+"a-b-s". Return the absolute value of "n".
+
+
+      99 abs          ( returns 99 )
+      -1 abs          ( returns 1 )
+
+
+__________________________________________________________________
+
+append_this
+( 'string --- )
+"append-this". Append the string whose address is on the top of
+the stack to the current SGML buffer.
+
+   " this is a test" append_this
+
+
+__________________________________________________________________
+
+align
+( --- )
+"align". "align" will be used with "c," when it is
+implemented.
+
+__________________________________________________________________
+
+allot
+( n --- )
+"allot". Allocate "n" bytes in the dictionary. This is another place
+where Until departs from normal Forth implementations. The memory
+allocation is made and the following actions performed:
+
+- The address returned from malloc() put in the PFA
+- The CFA is changed to "do_allot"
+
+
+The effect is that the allocation is applied to most recently defined
+word in the dictionary. This is indeed what is desired in most cases.
+Forth simply increments DP to allow for "n" bytes in the dictionary.
+It works well with a flat, contiguous dictionary, but not in the
+linked list of structures used by Until. Defining a string or array is
+typical usage of allot:
+
+
+      variable any_string 80 allot
+      create any_string_too 80 allot
+
+
+This statement creates a string with 80 bytes allocated to it. This
+operation is not identical to the ANS Forth standard, but matches
+Forth-83.
+
+__________________________________________________________________
+
+and
+( n1 n2 --- n3 )
+"and". This is a bitwise and operation. (n1 & n2).
+
+
+	1111 1111 - n1
+	0000 1111 - n2
+	0000 1111 - result n1&n2
+
+
+Only bits that are on in both n1 and n2 are on after the operation.
+
+__________________________________________________________________
+
+APPEND
+( --- 'APPEND )
+"append". This word leaves the address of the "a" string used by fopen.
+
+
+      { anyfile.dat} APPEND fopen
+
+
+opens "anyfile.dat" for output with end access.
+
+__________________________________________________________________
+
+argc
+( --- argc )
+"a-r-g-c". argc leaves the number of arguments from the command line on the
+parameter stack. This makes passing command line arguments to Until
+words easy.
+
+__________________________________________________________________
+
+argv
+( --- argv )
+"a-r-g-v". argv leaves the pointer to the arguments on the command
+line. This makes passing command line arguments to Until words easy.
+
+__________________________________________________________________
+
+ascii
+( --- c )
+"ascii". Convert the character following in the input stream to its
+ASCII-equivalent integer number.
+
+
+      ascii A
+
+
+leaves decimal 65 on the stack.
+
+__________________________________________________________________
+
+atol
+( 'string --- n )
+"a-to-l". Convert the null terminated string whose address is
+on the top of the parameter stack to a long integer. "atol" calls
+the C atol() function.
+
+__________________________________________________________________
+
+
+                                  B
+
+__________________________________________________________________
+
+base
+( --- base )
+"base". Fetch the current base to the top of the stack. The current
+base can be typed by:
+
+
+      base @ dup decimal . base !
+
+
+__________________________________________________________________
+
+begin
+( --- )
+"begin". "begin" marks the starting point for a
+"begin ... until "
+loop. The compiler uses begin to mark the branch point for
+the "until" statement. Typical usage:
+
+
+      : aword   begin 1+ dup 10 > until ;
+      0 aword
+
+
+"aword" expects a value on the stack. It loops until the counter on
+the stack is greater than ten. See "until".
+
+__________________________________________________________________
+
+binary
+( --- )
+"binary". Sets the current base to binary.
+
+__________________________________________________________________
+
+BINARY
+( --- 'BINARY )
+"binary". Sets the file type for "fopen" to binary. This is necessary
+to process a file that contains non-Ascii data. Typical usage:
+
+
+      { anyfile.dat} BINARY fopen
+
+
+See the File I/O word glossary for complete examples.
+
+__________________________________________________________________
+
+bold_off
+( --- )
+"bold off". Set screen video to normal. This specific to Borland C++
+at the present time.
+
+__________________________________________________________________
+
+bold_on
+( --- )
+"bold on". Set screen video to bold. This word is specific to Borland
+C++ at the present time.
+
+__________________________________________________________________
+
+branch
+Internal Use Only"
+"branch". "branch" is an unconditional branch compiled into the
+dictionary to cause program branching. The number compiled with branch
+is the relative offset within the parameter field to branch to
+by setting IP.
+
+__________________________________________________________________
+
+bye
+( --- )
+"bye". Exit Until and return to the calling function. Returns to DOS if
+stand alone program.
+
+__________________________________________________________________
+
+
+                                  C
+
+__________________________________________________________________
+
+c!
+( c addr --- )
+"c-store". Store the character, "c", at address "addr". This is
+a byte oriented operation.
+
+
+      ascii A here c!
+
+
+stores the integer value for 'A' (65 decimal) at the address of here.
+
+__________________________________________________________________
+
+c,
+( c --- )
+"c comma". Not implemented. Normal Forths compile the character into
+the next available byte in the dictionary. There are several issues
+that must be resolved in my mind before I add "c," to Until. The
+problem is caused by the non-contiguous dictionary. Does the character
+get compiled into the last definition? Should an allot be required
+before c,? The problems are compatibility related not technical...
+
+__________________________________________________________________
+
+c@
+( addr --- c )
+"c-fetch". Fetch the character located at the address, "addr". The
+following statement fetches the character stored at here:
+
+
+      here c@ .
+
+
+Assuming that here contains a `A', the number 65 will be typed.
+
+__________________________________________________________________
+
+case
+( n --- )
+"case". Start a multi-path conditional statement. Each selection
+is specified by a match on an "of" statement. For example:
+
+   : test      ( n --- )
+      case
+      1 of ." n is 1" cr endof
+      2 of ." n is 2" cr endof
+      ." No match" cr
+      endcase ;
+
+
+n is left on the stack by "of" each time the test fails. Therefore,
+"endcase" removes n from the parameter stack when no cases match.
+"case" is roughly equivalent to the C switch statement.
+See: "endcase", "endof", "of"
+
+__________________________________________________________________
+
+center
+( 'string --- )
+"center".
+
+__________________________________________________________________
+
+clear_read
+( --- )
+"clear-read". Resets the current SGML input buffer, "this_field",
+to a small scratch buffer. It cannot be simply set to zero just in case
+more data is collected.
+
+__________________________________________________________________
+
+clear_temp
+(  --- )
+"clear-temp". The search and replace C functions use a dynamically
+allocated temporary work string. Calling clear_temp will free()
+the memory.
+
+__________________________________________________________________
+
+cls
+( --- )
+"c-l-s". Clear screen. Note: This word is functional only in the
+PC version of Until.
+
+__________________________________________________________________
+
+cmove
+( 'from 'to n --- )
+"c-move". Move "n" bytes starting at address "'from" to
+the destination address, "'to". The source and string should
+not overlap. Use "cmove>" for overlapping strings.
+
+
+      source destination 20 cmove
+
+
+moves 20 bytes from "source" to "destination".
+
+__________________________________________________________________
+
+cmove>
+( 'from 'to n --- )
+"c-move-up". Move "n" bytes starting at "'from" to "'to".
+This move operations starts at the end of the buffer and works toward
+the front. "cmove>" should be used when source and destination
+strings overlap. Use "cmove" for non-overlapping strings.
+
+__________________________________________________________________
+
+cold
+( --- )
+"cold". Perform a cold start of the system. The stacks are cleared
+and the primitives recreated.
+
+__________________________________________________________________
+
+comma_offset
+( --- 'comma_offset)
+"comma offset". Push the address of the C variable "comma_offset"
+onto the parameter stack.
+
+__________________________________________________________________
+
+compile
+( --- )
+"compile". Compile the following word into the current definition. It
+is typically used in immediate words to compile an address into
+the definition. Usage:
+
+
+      : immed-word   compile cr ; immediate
+
+
+Since "immed-word" executes at compile time to include "cr"
+in the word definition. Generally, the definition is an immediate
+word that contains a non-immediate word that is to be compiled rather
+than executed. Use "compile" only inside a colon definition.
+
+__________________________________________________________________
+
+constant
+( --- n )
+"constant". Create a constant. The compile time stack comment is
+( n --- ). Typical usage is:
+
+
+      5 constant five
+
+
+When "five" is referenced, the integer 5 is pushed onto
+the parameter stack:
+
+
+      five    ( --- 5 )
+
+
+__________________________________________________________________
+
+convert
+( d 'numeric_string --- d2 'end )
+"convert". Convert the numeric Ascii string to a double number. The
+end address is the address of the first non-numeric character in
+the numeric string. NOT IMPLEMENTED.
+
+__________________________________________________________________
+
+count
+( 'addr --- addr+1 len )
+"count". Convert a counted string address, "addr", to the
+first byte address and length.
+
+
+      a_string count type
+
+
+"count" is used in conjunction with many words that require
+an address and a length to manipulate a counted string.
+
+__________________________________________________________________
+
+cr
+( --- )
+"c-r". Type a carriage return to the screen. This word is vectored.
+
+__________________________________________________________________
+
+create
+( --- )
+"create". Create an empty word definition. The word name assigned
+is the following blank delimited token in the input stream. Usage:
+
+
+      create name     &backslash; run-time ( --- 'name )
+
+
+The run-time execution of name leaves its address on the top of the
+stack. "create" can be used to build arrays and such.
+
+__________________________________________________________________
+
+
+                                  D
+
+__________________________________________________________________
+
+d+
+( d1 d2 --- d1+d2 )
+"d-plus". Double number addition. The high order cell contains a
+dummy zero for a place holder for compatibility with other
+Forth implementations. Both d+ and + operate with 32-bit integer
+values.
+
+__________________________________________________________________
+
+d-
+( d1 d2 --- d1-d2 )
+"d-minus". Double number subtraction. (d1-d2). The high order cell
+contains a dummy zero for a place holder for compatibility with other
+Forth implementations. Both d- and - operate with 32-bit integer
+values.
+
+__________________________________________________________________
+
+d<
+( d1 d2 --- tf )
+"d-less-than". Compare two double numbers. TRUE is left on the stack
+if "d1" is less than "d2". The high order cell contains a
+dummy zero for a place holder for compatibility with other
+Forth implementations.
+
+__________________________________________________________________
+
+decimal
+( --- )
+"decimal". Set current base to 10.
+
+__________________________________________________________________
+
+definitions
+( --- )
+"definitions".
+
+__________________________________________________________________
+
+depth
+( --- n )
+"depth". Leave the current parameter stack depth on the stack.
+
+__________________________________________________________________
+
+dir
+( --- )
+Executes a "dir" command to the OS. This works fine in DOS, CP/M, and
+VAX/VMS. In Unix and its' clones, you must create a shell script named dir.
+
+__________________________________________________________________
+
+dnegate
+( d --- d2 )
+"d-negate". Leave the two's complement of a double number on the
+top of the stack. The high order cell contains a
+dummy zero for a place holder for compatibility with other
+Forth implementations.
+
+__________________________________________________________________
+
+do
+( limit start --- )
+"do". Begin a do loop. Can be used only in a macro definition.
+
+
+      : ten-dots 10 0 do " ." loop ;
+
+
+See "loop".
+
+__________________________________________________________________
+
+does>
+( --- )
+"does". Not implemented, but not 100% necessary
+in Until because the same functionality can be achieved via
+C. I do plan to implement "does>" someday.
+
+__________________________________________________________________
+
+do_compile
+( --- )
+"do compile". This is an internal compiler word that should not
+be used!
+
+__________________________________________________________________
+
+do_definitions
+( --- )
+"do definitions". This is an internal compiler word that is the
+run-time portion of "definitions".
+
+__________________________________________________________________
+
+do_do
+Internal Use Only
+"do-do". This is the run-time portion of do.
+
+__________________________________________________________________
+
+do_loop
+Internal Use Only
+"do-loop". This is the run-time portion of loop.
+
+__________________________________________________________________
+
+do_vocabulary
+( --- )
+"do vocabulary". This is the run-time portion of "vocabulary".
+
+__________________________________________________________________
+
+drop
+( n --- )
+"drop". Remove the top number on the parameter stack.
+
+__________________________________________________________________
+
+dump
+( addr len --- )
+"dump". Type a hex dump starting at "addr" for a length of "len".
+The actual number of bytes displayed is rounded up to the
+next 16-byte boundary to insure the complete last line in the dump prints.
+
+__________________________________________________________________
+
+dup
+( n --- n n )
+"dup".  Duplicate the top stack entry:
+
+
+      1 dup
+
+
+Results in two 1s on the stack.
+
+__________________________________________________________________
+
+
+E
+
+__________________________________________________________________
+
+edit
+( 'filename --- )
+This word shells to the OS to execute the editor specified in
+the global C variable "editor". The default is EMACS, except for
+Coherent where the name is "me". Usage is:
+
+      { filename} here edit
+
+or
+      " filename" edit
+
+
+Once the filename has been specified in the first edit, simply use
+"here" to edit the same file again. Use "system" to use
+another editor at run-time.
+
+__________________________________________________________________
+
+else
+( --- )
+"else". Else is the starting execution point for the FALSE portion
+of an if statement. Its usage is:
+
+
+      : aword   if ." true" else ." false" then ;
+
+
+Use only within a colon definition. See "if".
+
+__________________________________________________________________
+
+emit
+( c --- )
+"emit". Type the character on the top of the stack to the
+screen.
+
+
+      65 emit
+
+
+displays an `A'.
+
+__________________________________________________________________
+
+endcase
+( n --- )
+"end-case". Close a "case" conditional statement.
+
+__________________________________________________________________
+
+endif
+( --- )
+"end-if". A synonym for "then".
+Terminate an "if" statement. "endif" is the branch
+point for exiting the conditional. See "if". It
+is used in the
+form"
+
+
+      : aword    if true_words else false_words endif ;
+      : bword    if true_words endif ;
+
+
+The "if" statement and its parts can only be used in a colon
+definition.
+
+__________________________________________________________________
+
+endof
+( n --- )
+"end-of". Close the "of" portion of a "case" conditional statement.
+
+__________________________________________________________________
+
+execute
+( 'word --- )
+"execute". Execute the word whose address, "'word", is on the
+top of the stack. Used in the form:
+
+
+       ' aword execute
+
+
+Some Forths expect the CFA and others expect the PFA. Until uses the
+WA, which is the address of the dictionary entry structure. In the
+case where ' returns the CFA and "expect" requires the PFA, the
+word ">body" must be used to convert the CFA to the PFA. This is
+not required by Until.
+
+__________________________________________________________________
+
+exit
+( --- )
+"exit". This word presently does nothing at the present. Someday, it
+will exit from the currently executing word.
+__________________________________________________________________
+
+expect
+( addr len --- )
+"expect". Read up to "len" characters from the keyboard
+into the buffer pointed to by "addr". Input is terminated either
+by a <CR> or "len" bytes being read. The number of bytes input
+can be obtained from the system variable "span".
+
+__________________________________________________________________
+
+
+                                  F
+
+__________________________________________________________________
+
+f!
+( fn addr --- )
+"f-store". Store the floating point value, "fn", at address
+specified by "addr".
+
+
+      f# 3.1417 pi f!
+
+
+moves 3.1417 into the floating point variable pi.
+
+__________________________________________________________________
+
+
+f#
+( --- f# )
+"f-number". Interpret the next number in the input in the input
+stream as a floating point number.
+
+
+     f# 123.45  float-foo f!
+
+
+__________________________________________________________________
+
+f*
+( f1 f2 --- f-product )
+"f-star". Multiply two floating point numbers leaving the result on
+the floating point stack.
+
+
+     f# 2.0  f# 2.0 f* f.
+     4.00
+
+multiplies 2.0 by 2.0 and prints the result on the screen.
+
+__________________________________________________________________
+
+f+
+( f1 f2 --- f-sum )
+"f-plus". Add f1 to f2. The sum is placed on the top
+of the floating point stack.
+
+
+      f# 1.0 f# 2.0 +
+
+
+The result, 3.0, is left on the top of the floating point stack.
+
+__________________________________________________________________
+
+f-
+( f1 f2 --- f3 )
+"f-minus". Subtract f2 from f1 and place the result
+on the top of the floating point stack. (f1-f2=f3).
+
+
+      f# 2 f# 1 f-
+
+
+The result, 1.0, is left on the stack.
+
+__________________________________________________________________
+
+f.
+( fn --- )
+"f-dot". Display the number at the top of the floating point
+stack to the screen. This is a stack destructive operation.
+
+__________________________________________________________________
+
+f.s
+( ? --- ? )
+"f-dot-s". Non-destructive floating point stack display to the screen.
+
+__________________________________________________________________
+
+f/
+( f1 f2 --- fquotent )
+"f-divide". Divide f1 by f2. (f1/f2).
+
+
+      4 2 /
+
+
+Leaves 2.0 on the top of the floating point stack. There
+is no remainder.
+
+
+      f# 9 f# 2 f/
+
+
+computes to 4.50.
+
+__________________________________________________________________
+
+f<
+( f1 f2 --- tf )
+"f-less-than". Compare the two numbers on the top of the stack
+and return TRUE or FALSE.
+
+
+      f# 5 f# 6 f<          ( RETURNS true  )
+      f# 5 f# 5 f<          ( RETURNS false )
+      f# 6 f# 5 f<          ( RETURNS false )
+
+
+__________________________________________________________________
+
+f=
+( f1 f2 --- tf )
+"f-equal". Compare the top two values on the stack for equality.
+
+
+      f# 5 f# 6 f=         ( returns false )
+      f# 5 f# 5 f=         ( returns true  )
+      f# 6 f# 5 f=         ( returns false )
+
+
+__________________________________________________________________
+
+f>
+( f1 f2 --- tf )
+"f-greater-than". Compare the top two
+floating point stack entries. (f1>f2).
+
+
+      f# 5 f# 6 f>          ( returns false )
+      f# 5 f# 5 f>          ( returns false )
+      f# 6 f# 5 f>          ( returns true  )
+
+
+__________________________________________________________________
+
+f@
+( addr --- fn )
+"f-fetch". Fetch the floating point value from address and
+place on the top of the floating point stack.
+
+
+      ftrash f@
+
+
+retrieves the value stored at ftrash and places it on the top
+of the floating point stack.
+
+__________________________________________________________________
+
+fclose
+( fd --- )
+"f-close". Close the file whose file descriptor is "fd".
+
+__________________________________________________________________
+
+fconstant
+( --- fn )
+"f-constant". Create a floating point constant. The compile time
+stack comment is ( fn --- ). Typical usage is:
+
+
+      f# 3.1416 fconstant pi
+
+
+When "pi" is referenced, the floating point value 3.1416
+is pushed onto the floating point stack:
+
+
+      pi    ( --- 3.1416 )
+
+
+__________________________________________________________________
+
+fcr
+( fd --- status )
+"f-c-r". Write a carriage return (well actually a newline) to the output
+file specified by "fd".
+
+      descriptor @ fcr
+
+
+__________________________________________________________________
+
+fdrop
+( f1 --- )
+"f-drop". Remove the top number from the floating point stack.
+
+__________________________________________________________________
+
+fdup
+( f1 --- f1 f1 )
+"f-dup". Duplicate the number on the top of the floating point stack.
+
+      f# 1.0 f# 1.0 fdup
+
+
+Results in two 1.0s on the floating point stack.
+
+__________________________________________________________________
+
+feof
+( fd --- 0|eof )
+"f-e-o-f". Test the specified stream, "fd", for end of file. A
+zero return means not at EOF. Eof is returned if the last file operation
+encountered end of file.
+
+   descriptor @ feof
+        if   ." Got eof"
+        else ." Not eof" then
+
+
+__________________________________________________________________
+
+ferror
+( fd --- tf )
+"f-error". This word tests the file stream for read or write error. FALSE
+means no error and TRUE indicates an error has occurred.
+
+        descriptor @ ferror
+        if   ." File error"
+        else ." No error" endif
+
+__________________________________________________________________
+
+fence
+( --- )
+"fence". This is a special word that "forget" will not forget
+past. It protects the default word set from being accidentally
+deleted.
+
+__________________________________________________________________
+
+fflush
+( fd --- )
+"f-flush". This word flushes the system output buffer for the file
+specified by "fd". The file must have been opened previously by a call
+to "fopen". fflush only makes sense for output files.
+
+        descriptor @ fflush
+
+__________________________________________________________________
+
+fgetc
+( fd --- c )
+"f-get-c". Read the next character from the file specified by
+the file descriptor fd. The character is true (-1) on End of File.
+
+        descriptor @ fgetc
+
+__________________________________________________________________
+
+fgets
+( addr size fd --- count )
+"f-get-s". Read the next string of a max length of "size"
+into the buffer at
+"addr" from file "fd". The count is the number of bytes actually read
+or 0 for End of File. A "string" is logically a line in the file. The
+trailing newline character is included in the result string. "fgets"
+reads up to the new line character.
+
+        buffer size descriptor @ fgets
+        0= if ." EOF" then
+
+Empty lines have a length of one because "fgets" reads the trailing
+<newline> as part of the buffer.
+__________________________________________________________________
+
+fill
+( addr len byte --- )
+"fill". Fill memory starting at "addr" for a length of "len"
+with the value specified by "byte".
+
+
+      trash 20 0 fill
+
+will copy 20 zeros into the memory starting at the address of "trash".
+
+__________________________________________________________________
+
+fload
+( --- )
+"f-load". "fload" loads a .BIN file.
+
+	fload anyfile.bin
+
+
+__________________________________________________________________
+
+float>
+( f1 --- n )
+"from-float". Convert a floating point number to integer.
+
+
+     f# 123.456 float>
+
+
+leaves 123 on the parameter stack.
+
+__________________________________________________________________
+
+fnsplit
+( 'filename  --- 'drive 'dir 'file 'ext )
+"f-n-split". Break the filename contained in the string whose address
+is on the top of the stack into its component parts.
+
+        " c:&backslash;until&backslash;outer.c" fnsplit
+        .( Extension> ) dup strlen type cr
+        .( File     > ) dup strlen type cr
+        .( Dir      > ) dup strlen type cr
+        .( Drive    > ) dup strlen type cr
+
+
+__________________________________________________________________
+
+fopen
+( 'filename 'fmode --- fd )
+"f-open". Open the file whose name is stored in "'filename" and has a
+valid C file mode string. The predefined file modes in Until are
+BINARY, READ, WRITE, or APPEND. The file descriptor,
+"fd", should be saved and is used other file words to
+refer to the file.
+
+
+      : test " filename" READ fopen
+
+
+The predefined modes are:
+
+- READ
+- WRITE
+- APPEND
+- BINARY
+
+
+__________________________________________________________________
+
+for
+( n --- )
+"for". Start a "for ... next" loop. "n" is the number
+of times to execute the words up to the "next".
+
+
+      : xxx   for i . next ;
+      5 xxx
+
+
+executes the loop 5 times.
+
+__________________________________________________________________
+
+forget
+( --- )
+"forget". Forget the word following in the input stream:
+
+
+      forget aword
+
+
+Forget stops at "fence". It
+calls abort if the word is not found
+in the dictionary. The term "forget" means to remove all
+word definitions from the dictionary starting with the latest
+word back to and including the word to forget.
+
+__________________________________________________________________
+
+forth
+( --- )
+"forth". This is the base vocabulary in this system.
+
+__________________________________________________________________
+
+forth-83
+( --- )
+"forth-83". Types the message "Until is almost Forth-83 compatible."
+
+__________________________________________________________________
+
+fover
+( f1 f2 --- f1 f2 f1 )
+"f-over". Copy "f1" to the top of the floating point stack.
+
+
+      f# 1 f# 2 fover
+
+
+results in ( 1.0 2.0 1.0 ).
+
+__________________________________________________________________
+
+fprintf
+( a1 a2 ... an 'format fd --- )
+"f-print-f". This is the C fprintf() function. The top of the stack
+contains a file descriptor, fd, followed by the format
+string, 'format. 'format is a C fprintf() format string
+such as:
+
+   " A string: %s  or a decimal number: %d"
+
+The arguments to fprintf are in the order used. For example:
+
+   " string" 65 " A string: %s  or a decimal number: %d&backslash;n" fd @ fprintf
+
+will write:
+
+   A string: string  or a decimal number: 65
+
+with a trailing newline character to the file descriptor fd. The
+first argument goes with the first format specifier (" string" and the
+%s) and the second argument goes with the second format specifier
+(65 and %d) in this case.
+
+Note that floating point values cannot be used with fprintf. Use
+fprintf_f to output floating point values.
+
+__________________________________________________________________
+
+fprintf_f
+( a1 a2 ... an 'format fd --- )
+"f-print-f-underscore-f". This is the C fprintf() function.
+fprintf_f can only be used to out floating point values.
+The top of the stack
+contains a file descriptor, fd, followed by the format
+string, 'format. 'format is a C fprintf() format string
+such as:
+
+   " A floating point number: %e"
+
+The arguments to fprintf_f are in the order used. For example:
+
+   f# 123.456 " A floating point number: %e&backslash;n" fd @ fprintf_f
+
+will write:
+
+   A floating point number: 123.4560
+
+with a trailing newline character to the file descriptor fd. The
+first argument goes with the first format specifier (123.456 and the
+%e).
+
+Note that only floating point values can be used with fprintf_f. Use
+fprintf to output other values.
+
+__________________________________________________________________
+
+fputc
+( ch fd --- status)
+"f-put-c". Write the character, "ch", to the file whose descriptor is
+"fd". The status of the write is returned. The status is either
+the character on a successful write or EOF on error.
+
+        ascii A fd@ fputc drop
+
+__________________________________________________________________
+
+fputline
+( 'string fd --- status )
+"f-put-line". Write the string whose address is next to the top of the
+parameter stack to the file whose file descriptor, "fd", is
+on the top of the stack. A <CR> is appended to the string
+before being written. "status" is EOF when an error occurs.
+
+__________________________________________________________________
+
+fputs
+( 'buffer fd --- status )
+"f-put-s". Write the string whose address is specified by "buffer"
+to the file descriptor, "fd". "status" is the last character
+written on success or EOF on error.
+
+        string fd @ fputs drop
+
+__________________________________________________________________
+
+fread
+( addr len fd --- status )
+"f-read". Read a block of data from a disk file. This word eventually
+calls fread(). It reads "len" bytes into the buffer that
+starts at "addr". The status is the number of bytes read on
+success or zero for end of file.
+
+__________________________________________________________________
+
+free
+( addr --- )
+"free". Return memory allocated by "malloc" to the system.
+See "malloc" for an example.
+
+__________________________________________________________________
+
+frot
+( f1 f2 f3 --- f2 f3 f1 )
+"f-r-o-t". Rotate the third value on the floating point stack to the
+top. The other values are pushed down one cell.
+
+
+      f# 1 f# 2.0 f# 3.0 frot
+
+
+results in (2.0 3.0 1.0).
+
+__________________________________________________________________
+
+fseek
+( whence offset fd --- status)
+"f-seek". This word positions the file, "fd", to the offset
+specified by "offset". The offset is not necessarily the
+relative number of bytes from the beginning of the file. "whence"
+can be:
+
+
+   0 Beginning of the file (SEEK_SET)
+   1 From the current file position (SEEK_CUR)
+   2 End of the file (SEEK_END)
+
+
+The status is zero on success and non-zero on error. DOS only
+returns an error when attempting to position a file that has
+not been opened. Other operating systems may return additional
+errors.
+
+__________________________________________________________________
+
+fswap
+( f1 f2 --- f2 f1 )
+"f-swap". Swap the top two entries on the top of the
+floating point stack.
+
+
+      f# 1.0 f# 2.0 fswap
+
+
+results in the top stack entry being 2.0 and the second entry
+being 1.0.
+
+__________________________________________________________________
+
+ftell
+( fd --- offset)
+"f-tell". Return the file offset for the file specified by "fd".
+An offset of -1 indicates an error. Most C compilers return the number
+of bytes from the beginning of the file, but this is not
+guaranteed!
+
+__________________________________________________________________
+
+fvariable
+( --- 'fvariable )
+"f-variable". At compile time, creates a floating point variable:
+
+
+      fvariable ftrash
+
+
+The compile time stack comment for "variable" is ( --- ).
+At run time, push the address of the
+floating point variable onto the stack:
+
+
+      ftrash    ( --- addr.of.trash )
+
+
+__________________________________________________________________
+
+fwrite
+( addr len fd --- status )
+"f-write". Calls the C function "fwrite()". It writes the
+buffer at "addr" for a length of "len" bytes to the
+file specified by "fd". Status is the number of bytes
+written or zero for an error.
+
+__________________________________________________________________
+
+
+                                  G
+
+__________________________________________________________________
+
+get_env
+( 'env-string --- )
+"get-e-n-v". Retrieves the system environment variable whose
+name is contained in "'env-string". The original value is
+replaced with the value returned by the system.
+
+    80 string value
+    value " UNTIL-DIR" strcpy
+    value get_env
+    value dup count type cr
+
+
+__________________________________________________________________
+
+gotoxy
+( col row --- )
+"go to x-y". Position the screen cursor to column "col" and
+row "row". This word uses a Borland C++ specific function and
+may need modification with other compilers.
+
+__________________________________________________________________
+
+gsub
+( 'string 'search 'replace --- #matches )
+"g-sub". The global search and replace word searches "string"
+for "search" and replaces it with "replace" when a
+match occurs. This version performs multiple replacements in
+the string. The number of replacements is returned.
+
+   inbuf 1+ " is" " is not" gsub
+
+Searches <INBUF> for occurrences of "is" and replaces each with
+"is not".
+
+__________________________________________________________________
+
+                                  H
+
+__________________________________________________________________
+
+help
+( --- )
+"help". Looks up the specified word name in HELP.APP
+and prints the entry to the screen. Usage:
+
+
+      help do
+
+
+prints the help entry for "do". Use the words command to type the
+words defined.
+
+__________________________________________________________________
+
+here
+( --- 'here )
+"here". Push the address contained in the system variable, "here"
+onto the parameter stack. In Until,
+"here" is allocated at startup. Most other
+Forths allow it to float at the end of the dictionary. "here"
+is initially 128 bytes. "here" and "pad" are the
+same size.
+
+__________________________________________________________________
+
+hex
+( --- )
+"hex". Set the current base to 16.
+
+__________________________________________________________________
+
+hold
+( char --- )
+"hold". Add "char" to the numeric string. "hold" is used
+with <# ... #> to format numbers.
+
+__________________________________________________________________
+
+                                  I
+
+__________________________________________________________________
+
+i
+( --- i )
+"i". Push the current do loop index onto the Data Stack. When loops
+are nested, i always refers to the current loop.
+
+
+   : test_i
+     10 0 do i loop ;
+
+
+__________________________________________________________________
+
+if
+( tf --- )
+"if". Test the value on the top of the stack for True or False.
+
+
+      5 5 =
+      if   " True comparison"
+      else " False comparison"
+      endif
+
+
+The function do_if is executed at run-time.
+
+__________________________________________________________________
+
+immediate
+( --- )
+"immediate". Flag the last word in the dictionary as immediate. An
+immediate word executes at compile time rather than being compiled
+into the dictionary. Words such as "if" and "do"
+are immediate. Until
+primitives built with "build_iprim()" are immediate.
+
+__________________________________________________________________
+
+include
+( --- )
+"include". Compiles the file specified as the next token in the
